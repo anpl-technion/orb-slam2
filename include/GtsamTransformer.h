@@ -74,6 +74,9 @@ class GtsamTransformer {
  public:
   GtsamTransformer();
 
+  gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
+  gtsam::Pose3 init_pose_robot;
+
   /**
    * Returns tuple contains:
    * 1. Boolean indicates if there is a new data or not
@@ -84,7 +87,7 @@ class GtsamTransformer {
    * 6. Optional GTSAM KeyList contains the keys of the removed states (keyframes/landmarks) since the last call to the function
    * 7. Optional GTSAM Values object contains the values of entire graph (serialized)
    * 8. Optional tuple of the most recent keyframe symbol (serialized), its timestamp, and its Pose3 (serialized)
-   */
+   **/
   std::tuple<bool,
              boost::optional<bool>,
              boost::optional<std::string>,

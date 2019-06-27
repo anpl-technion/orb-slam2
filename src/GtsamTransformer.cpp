@@ -25,6 +25,17 @@ GtsamTransformer::GtsamTransformer() {
 #endif
   logger_->info("CTOR - GtsamTransformer instance created");
   between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e2, 1e2, 1e2, 1, 1, 1));
+
+
+  // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
+  gtsam::Quaternion quat(0.5,
+                         -0.5,
+                         0.5,
+                         -0.5);
+  gtsam::Point3 point(0.21, 0, 0.17);
+  sensor_to_body_temp = gtsam::Pose3(quat, point);
+
+  init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
 }
 
 void GtsamTransformer::addMonoMeasurement(ORB_SLAM2::KeyFrame *pKF,
@@ -49,7 +60,7 @@ void GtsamTransformer::addMonoMeasurement(ORB_SLAM2::KeyFrame *pKF,
              gtsam::noiseModel::Diagonal::Variances(Eigen::Vector2d(1 / inv_sigma_2, 1 / inv_sigma_2)),
              keyframe_sym.key(),
              landmark_sym.key(),
-             cam_params_mono_);
+             cam_params_mono_, sensor_to_body_temp);
   session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::MONO);
 }
 
@@ -75,7 +86,7 @@ void GtsamTransformer::addStereoMeasurement(ORB_SLAM2::KeyFrame *pKF,
              gtsam::noiseModel::Diagonal::Variances(Eigen::Vector3d(1 / inv_sigma_2, 1 / inv_sigma_2, 1 / inv_sigma_2)),
              keyframe_sym.key(),
              landmark_sym.key(),
-             cam_params_stereo_);
+             cam_params_stereo_, sensor_to_body_temp); // default:  boost::optional<POSE> body_P_sensor = boost::none => Identity, Andrej
   session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::STEREO);
 }
 
@@ -351,6 +362,10 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
   cv::Mat T_cv = pKF->GetPose();
   Eigen::Map<Eigen::Matrix<float, 4, 4, Eigen::RowMajor>> T_gtsam(T_cv.ptr<float>(), T_cv.rows, T_cv.cols);
   gtsam::Pose3 left_cam_pose(T_gtsam.cast<double>());
+
+  // TODO transform
+    left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame, // TODO check center or left
+
   gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
 
   session_values_.insert(sym.key(), stereo_cam.pose());
@@ -386,7 +401,11 @@ void GtsamTransformer::updateLandmark(ORB_SLAM2::MapPoint *pMP) {
 
   // Create landmark position
   cv::Mat p_cv = pMP->GetWorldPos();
-  gtsam::Point3 p_gtsam(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
+  //gtsam::Point3 p_gtsam(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
+
+  gtsam::Vector3 t_vector(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
+  t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
+    gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
 
   session_values_.insert(sym.key(), p_gtsam);
 }
