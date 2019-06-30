@@ -32,7 +32,7 @@ GtsamTransformer::GtsamTransformer() {
                          -0.5,
                          0.5,
                          -0.5);
-  gtsam::Point3 point(0.21, 0, 0.17);
+  gtsam::Point3 point(0.21, -0.06, 0.17);
   sensor_to_body_temp = gtsam::Pose3(quat, point);
 
   init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
@@ -366,14 +366,16 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
   // TODO transform
     left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame, // TODO check center or left
 
-  gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
+  //gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
 
-  session_values_.insert(sym.key(), stereo_cam.pose());
+  gtsam::Pose3 robot_pose = left_cam_pose.compose(sensor_to_body_temp.inverse());
+
+  session_values_.insert(sym.key(), robot_pose); //stereo_cam.pose()
 
   // Adding prior factor for x0
   if (pKF->mnId == 0) {
     auto prior_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6));
-    gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol('x', 0), stereo_cam.pose(), prior_noise);
+    gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol('x', 0), robot_pose, prior_noise);
     session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(prior_factor), FactorType::PRIOR);
   }
 
@@ -382,7 +384,7 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
     if (pKF->mnId != 0) {
       gtsam::Symbol sym_before('x', pKF->mnId - 1);
       if (session_values_.exists(sym_before.key())) {
-        gtsam::Pose3 relative_pose = stereo_cam.pose().between(session_values_.at<gtsam::Pose3>(sym_before.key())).between(gtsam::Pose3());
+        gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())).between(gtsam::Pose3());
         gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);
         session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
       }
@@ -391,7 +393,7 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
 
   // Update most recent keyframe
   if ((pKF->mTimeStamp > std::get<1>(recent_kf_)) || (pKF->mnId == 0)) {
-    recent_kf_ = std::make_tuple(gtsam::serialize(sym), pKF->mTimeStamp, gtsam::serialize(stereo_cam.pose()));
+    recent_kf_ = std::make_tuple(gtsam::serialize(sym), pKF->mTimeStamp, gtsam::serialize(robot_pose));
   }
 }
 

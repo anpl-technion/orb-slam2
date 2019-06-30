@@ -778,7 +778,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     pMP->SetWorldPos(Converter::toCvMat(vPoint->estimate()));
     pMP->UpdateNormalAndDepth();
   }
-  //gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
+  gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
 }
 
 
