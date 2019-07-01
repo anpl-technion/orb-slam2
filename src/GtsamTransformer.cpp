@@ -35,7 +35,19 @@ GtsamTransformer::GtsamTransformer() {
   gtsam::Point3 point(0.21, -0.06, 0.17);
   sensor_to_body_temp = gtsam::Pose3(quat, point);
 
-  init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
+  cout << "From quaternion \n ";
+  sensor_to_body_temp.print();
+
+
+  gtsam::Rot3 rot_m(0, 0, 1,
+          -1, 0, 0,
+          0, -1, 0);
+  gtsam::Pose3 sensor_to_body_temp2(rot_m, point);
+
+    cout << "From rot m \n ";
+    sensor_to_body_temp2.print();
+
+  init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,-0.707), gtsam::Point3(2,-6,0));
 }
 
 void GtsamTransformer::addMonoMeasurement(ORB_SLAM2::KeyFrame *pKF,
