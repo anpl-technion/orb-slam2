@@ -139,7 +139,7 @@ class GtsamTransformer {
                         std::string,
                         std::tuple<std::string, double, std::string>>> ready_data_queue_;
 
-  gtsam::Values session_values_, last_session_values_;
+  gtsam::Values session_values_, last_session_values_, values_before_transf;
   gtsam::Cal3_S2Stereo::shared_ptr cam_params_stereo_;
   gtsam::Cal3_S2::shared_ptr cam_params_mono_;
   gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;

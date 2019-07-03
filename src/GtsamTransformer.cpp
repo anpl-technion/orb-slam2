@@ -35,17 +35,17 @@ GtsamTransformer::GtsamTransformer() {
   gtsam::Point3 point(0.21, -0.06, 0.17);
   sensor_to_body_temp = gtsam::Pose3(quat, point);
 
-  cout << "From quaternion \n ";
-  sensor_to_body_temp.print();
-
-
-  gtsam::Rot3 rot_m(0, 0, 1,
-          -1, 0, 0,
-          0, -1, 0);
-  gtsam::Pose3 sensor_to_body_temp2(rot_m, point);
-
-    cout << "From rot m \n ";
-    sensor_to_body_temp2.print();
+//  cout << "From quaternion \n ";
+//  sensor_to_body_temp.print();
+//
+//
+//  gtsam::Rot3 rot_m(0, 0, 1,
+//          -1, 0, 0,
+//          0, -1, 0);
+//  gtsam::Pose3 sensor_to_body_temp2(rot_m, point);
+//
+//    cout << "From rot m \n ";
+//    sensor_to_body_temp2.print();
 
   init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,-0.707), gtsam::Point3(2,-6,0));
 }
@@ -340,25 +340,40 @@ map<pair<gtsam::Key, gtsam::Key>, pair<string, GtsamTransformer::FactorType>> Gt
 }
 
 void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *> &vpKFs, const vector<ORB_SLAM2::MapPoint *> &vpMP) {
-  if (!start())
-    return;
-  for (const auto &pKF: vpKFs) {
-    if (pKF->isBad())
-      continue;
-    updateKeyFrame(pKF, true);
-  }
-  for (const auto &pMP: vpMP) {
-    if (pMP->isBad())
-      continue;
-    updateLandmark(pMP);
-    const std::map<KeyFrame *, size_t> observations = pMP->GetObservations();
-    updateObservations(pMP, observations);
-  }
-  calculateDiffrencesBetweenValueSets();
-  calculateDiffrencesBetweenFactorSets();
-  finish();
-}
+    if (!start())
+        return;
 
+    ofstream myfile;
+    std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
+    std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
+    for (const auto &pKF: vpKFs) {
+        if (pKF->isBad())
+            continue;
+
+        updateKeyFrame(pKF, true);
+
+    }
+
+  gtsam::serializeToFile(session_values_, pathAF);
+  gtsam::serializeToFile(values_before_transf, pathBF);
+
+
+
+
+  //myfile <<   << " \n  , \n";
+
+    for (const auto &pMP: vpMP) {
+        if (pMP->isBad())
+            continue;
+        updateLandmark(pMP);
+        const std::map<KeyFrame *, size_t> observations = pMP->GetObservations();
+        updateObservations(pMP, observations);
+
+        calculateDiffrencesBetweenValueSets();
+        calculateDiffrencesBetweenFactorSets();
+        finish();
+    }
+}
 void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
   // Create keyframe symbol
   gtsam::Symbol sym('x', pKF->mnId);
@@ -370,10 +385,13 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
     is_cam_params_initialized_ = true;
   }
 
+
   // Create pose
   cv::Mat T_cv = pKF->GetPose();
   Eigen::Map<Eigen::Matrix<float, 4, 4, Eigen::RowMajor>> T_gtsam(T_cv.ptr<float>(), T_cv.rows, T_cv.cols);
   gtsam::Pose3 left_cam_pose(T_gtsam.cast<double>());
+
+  values_before_transf.insert(sym.key(), left_cam_pose);
 
   // TODO transform
     left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame, // TODO check center or left
@@ -381,7 +399,6 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
   //gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
 
   gtsam::Pose3 robot_pose = left_cam_pose.compose(sensor_to_body_temp.inverse());
-
   session_values_.insert(sym.key(), robot_pose); //stereo_cam.pose()
 
   // Adding prior factor for x0
@@ -416,10 +433,9 @@ void GtsamTransformer::updateLandmark(ORB_SLAM2::MapPoint *pMP) {
   // Create landmark position
   cv::Mat p_cv = pMP->GetWorldPos();
   //gtsam::Point3 p_gtsam(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
-
   gtsam::Vector3 t_vector(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
   t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
-    gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
+  gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
 
   session_values_.insert(sym.key(), p_gtsam);
 }
