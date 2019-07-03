@@ -346,12 +346,13 @@ void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *>
     ofstream myfile;
     std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
     std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
+    long unsigned int KFid = 0;
     for (const auto &pKF: vpKFs) {
         if (pKF->isBad())
             continue;
-
+        pKF->mnId = KFid;
         updateKeyFrame(pKF, true);
-
+        KFid++;
     }
 
   gtsam::serializeToFile(session_values_, pathAF);
