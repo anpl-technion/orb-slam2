@@ -131,10 +131,11 @@ bool GtsamTransformer::start() {
   std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
   if (lock.owns_lock()) {
     logger_->info("start - new recovering session.");
-    std::printf("**************************start - new recovering session.\n");
+    //std::printf("**************************start - new recovering session.\n");
     add_states_.clear();
     del_states_.clear();
     session_values_.clear();
+    values_before_transf.clear();
 
     add_factors_.clear();
     del_factors_.clear();
@@ -185,7 +186,7 @@ void GtsamTransformer::finish() {
             << " del_factors.size: " << del_factors_.size() << " add_states.size: " << add_states_.size() << " del_states.size: "
             << del_states_.size() << " values.size: " << session_values_.size() << " last_values.size: " << last_session_values_.size() << std::endl;
 
-  std::printf("*************************************finish!!!\n");
+  //std::printf("*************************************finish!!!\n");
 
   last_session_values_ = session_values_;
   last_session_factors_ = session_factors_;
