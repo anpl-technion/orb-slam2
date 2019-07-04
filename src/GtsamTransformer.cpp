@@ -28,7 +28,7 @@ GtsamTransformer::GtsamTransformer() {
 
 
   // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
-  gtsam::Quaternion quat(0.5,
+  gtsam::Quaternion quat(0.707,
                          -0.5,
                          0.5,
                          -0.5);
@@ -47,7 +47,7 @@ GtsamTransformer::GtsamTransformer() {
 //    cout << "From rot m \n ";
 //    sensor_to_body_temp2.print();
 
-  init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,-0.707), gtsam::Point3(2,-6,0));
+  init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
 }
 
 void GtsamTransformer::addMonoMeasurement(ORB_SLAM2::KeyFrame *pKF,
@@ -131,6 +131,7 @@ bool GtsamTransformer::start() {
   std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
   if (lock.owns_lock()) {
     logger_->info("start - new recovering session.");
+    std::printf("**************************start - new recovering session.\n");
     add_states_.clear();
     del_states_.clear();
     session_values_.clear();
@@ -178,10 +179,13 @@ void GtsamTransformer::finish() {
   }
   logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
 
+
   std::cout << "finish - session_factors.size: " << session_factors_.size() << " last_session_factors.size: " << last_session_factors_.size()
             << " add_factors.size: " << add_factors_.size()
             << " del_factors.size: " << del_factors_.size() << " add_states.size: " << add_states_.size() << " del_states.size: "
             << del_states_.size() << " values.size: " << session_values_.size() << " last_values.size: " << last_session_values_.size() << std::endl;
+
+  std::printf("*************************************finish!!!\n");
 
   last_session_values_ = session_values_;
   last_session_factors_ = session_factors_;
@@ -346,22 +350,18 @@ void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *>
     ofstream myfile;
     std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
     std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
-    long unsigned int KFid = 0;
+    std::string pathLAF = "/usr/ANPLprefix/orb-slam2/LandafterKey.txt";
+    std::string pathLBF = "/usr/ANPLprefix/orb-slam2/LandbeforeKey.txt";
+    //long unsigned int KFid = 0;
     for (const auto &pKF: vpKFs) {
         if (pKF->isBad())
             continue;
-        pKF->mnId = KFid;
         updateKeyFrame(pKF, true);
-        KFid++;
+
     }
 
   gtsam::serializeToFile(session_values_, pathAF);
   gtsam::serializeToFile(values_before_transf, pathBF);
-
-
-
-
-  //myfile <<   << " \n  , \n";
 
     for (const auto &pMP: vpMP) {
         if (pMP->isBad())
@@ -374,6 +374,8 @@ void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *>
         calculateDiffrencesBetweenFactorSets();
         finish();
     }
+  gtsam::serializeToFile(session_values_, pathLAF);
+  gtsam::serializeToFile(values_before_transf, pathLBF);
 }
 void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
   // Create keyframe symbol
@@ -392,13 +394,12 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
   Eigen::Map<Eigen::Matrix<float, 4, 4, Eigen::RowMajor>> T_gtsam(T_cv.ptr<float>(), T_cv.rows, T_cv.cols);
   gtsam::Pose3 left_cam_pose(T_gtsam.cast<double>());
 
+  // +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
   values_before_transf.insert(sym.key(), left_cam_pose);
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
-  // TODO transform
-    left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame, // TODO check center or left
-
+  left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame
   //gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
-
   gtsam::Pose3 robot_pose = left_cam_pose.compose(sensor_to_body_temp.inverse());
   session_values_.insert(sym.key(), robot_pose); //stereo_cam.pose()
 
@@ -435,9 +436,16 @@ void GtsamTransformer::updateLandmark(ORB_SLAM2::MapPoint *pMP) {
   cv::Mat p_cv = pMP->GetWorldPos();
   //gtsam::Point3 p_gtsam(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
   gtsam::Vector3 t_vector(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
-  t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
-  gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
 
+  // +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+  gtsam::Vector3 t_vector_BF(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
+  t_vector_BF += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
+  gtsam::Point3 p_gtsam_BF(t_vector_BF.x(), t_vector_BF.y(), t_vector_BF.z());
+  values_before_transf.insert(sym.key(), p_gtsam_BF);
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+  t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.inverse().translation().vector();
+  gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
   session_values_.insert(sym.key(), p_gtsam);
 }
 
