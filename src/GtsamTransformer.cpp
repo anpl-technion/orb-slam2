@@ -395,9 +395,12 @@ void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between
   Eigen::Map<Eigen::Matrix<float, 4, 4, Eigen::RowMajor>> T_gtsam(T_cv.ptr<float>(), T_cv.rows, T_cv.cols);
   gtsam::Pose3 left_cam_pose(T_gtsam.cast<double>());
 
+  // Camera frame
+  left_cam_pose = left_cam_pose.inverse();
   // +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
   values_before_transf.insert(sym.key(), left_cam_pose);
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
 
   left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame
   //gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
@@ -445,7 +448,7 @@ void GtsamTransformer::updateLandmark(ORB_SLAM2::MapPoint *pMP) {
   values_before_transf.insert(sym.key(), p_gtsam_BF);
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
-  t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.inverse().translation().vector();
+  t_vector += init_pose_robot.inverse().translation().vector() + sensor_to_body_temp.inverse().translation().vector();
   gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
   session_values_.insert(sym.key(), p_gtsam);
 }
