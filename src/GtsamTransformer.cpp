@@ -28,7 +28,7 @@ GtsamTransformer::GtsamTransformer() {
 
 
   // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
-  gtsam::Quaternion quat(0.707,
+  gtsam::Quaternion quat(0.5,
                          -0.5,
                          0.5,
                          -0.5);
