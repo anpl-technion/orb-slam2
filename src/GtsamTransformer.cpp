@@ -35,18 +35,6 @@ GtsamTransformer::GtsamTransformer() {
   gtsam::Point3 point(0.21, -0.06, 0.17);
   sensor_to_body_temp = gtsam::Pose3(quat, point);
 
-//  cout << "From quaternion \n ";
-//  sensor_to_body_temp.print();
-//
-//
-//  gtsam::Rot3 rot_m(0, 0, 1,
-//          -1, 0, 0,
-//          0, -1, 0);
-//  gtsam::Pose3 sensor_to_body_temp2(rot_m, point);
-//
-//    cout << "From rot m \n ";
-//    sensor_to_body_temp2.print();
-
   init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
 }
 
@@ -131,7 +119,6 @@ bool GtsamTransformer::start() {
   std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
   if (lock.owns_lock()) {
     logger_->info("start - new recovering session.");
-    //std::printf("**************************start - new recovering session.\n");
     add_states_.clear();
     del_states_.clear();
     session_values_.clear();
@@ -443,12 +430,14 @@ void GtsamTransformer::updateLandmark(ORB_SLAM2::MapPoint *pMP) {
 
   // +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
   gtsam::Vector3 t_vector_BF(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
-  t_vector_BF += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
+  //t_vector_BF += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
   gtsam::Point3 p_gtsam_BF(t_vector_BF.x(), t_vector_BF.y(), t_vector_BF.z());
   values_before_transf.insert(sym.key(), p_gtsam_BF);
   // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
-  t_vector += init_pose_robot.inverse().translation().vector() + sensor_to_body_temp.inverse().translation().vector();
+  t_vector = init_pose_robot.rotation().matrix()*sensor_to_body_temp.rotation().matrix()*t_vector;
+  t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
+
   gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
   session_values_.insert(sym.key(), p_gtsam);
 }
