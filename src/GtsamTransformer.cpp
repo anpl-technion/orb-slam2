@@ -54,7 +54,17 @@ void GtsamTransformer::addMonoMeasurement(ORB_SLAM2::KeyFrame *pKF,
   // Create landmark observation
   gtsam::Point2 obs_gtsam(obs(0), obs(1));
 
-  // Create factor graph
+    /*// Create factor graph
+    gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2>
+    factor_in_cam(obs_gtsam,
+           gtsam::noiseModel::Diagonal::Variances(Eigen::Vector2d(1 / inv_sigma_2, 1 / inv_sigma_2)),
+           keyframe_sym.key(),
+           landmark_sym.key(),
+           cam_params_mono_); // idendity sensor to body
+
+    session_factors_before[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor_in_cam), FactorType::MONO);
+*/
+            // Create factor graph
   gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2>
       factor(obs_gtsam,
              gtsam::noiseModel::Diagonal::Variances(Eigen::Vector2d(1 / inv_sigma_2, 1 / inv_sigma_2)),
@@ -87,7 +97,8 @@ void GtsamTransformer::addStereoMeasurement(ORB_SLAM2::KeyFrame *pKF,
              keyframe_sym.key(),
              landmark_sym.key(),
              cam_params_stereo_, sensor_to_body_temp); // default:  boost::optional<POSE> body_P_sensor = boost::none => Identity, Andrej
-  session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::STEREO);
+
+             session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::STEREO);
 }
 
 std::tuple<bool,
@@ -124,6 +135,8 @@ bool GtsamTransformer::start() {
     session_values_.clear();
     values_before_transf.clear();
 
+    graph = gtsam::NonlinearFactorGraph();
+
     add_factors_.clear();
     del_factors_.clear();
     session_factors_.clear();
@@ -156,6 +169,9 @@ void GtsamTransformer::finish() {
   } else if (update_type_ == BATCH) {
     // Batch update
     auto active_factor_graph = createFactorGraph(session_factors_, false);
+
+    std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
+    gtsam::serializeToFile(active_factor_graph, pathFGAF);
     ready_data_queue_.emplace(true,
                               false,
                               gtsam::serialize(active_factor_graph),
@@ -211,7 +227,7 @@ gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std:
     current_index_ = 0;
     factor_indecies_dict_.clear();
   }
-  gtsam::NonlinearFactorGraph graph;
+  //gtsam::NonlinearFactorGraph graph;
   for (const auto &it: ser_factors_vec) {
     switch (it.second) {
       case FactorType::PRIOR: {
@@ -219,6 +235,7 @@ gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std:
         gtsam::deserialize(it.first, prior_factor);
         graph.push_back(prior_factor);
         factor_indecies_dict_[std::make_pair(prior_factor.keys()[0], prior_factor.keys()[1])] = current_index_++;
+          cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    PRIOIR-"  << endl;
         break;
       }
       case FactorType::BETWEEN: {
@@ -237,6 +254,7 @@ gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std:
         }
         graph.push_back(between_factor);
         factor_indecies_dict_[std::make_pair(between_factor.keys()[0], between_factor.keys()[1])] = current_index_++;
+          cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    BETWEEN-"  << endl;
         break;
       }
       case FactorType::MONO: {
@@ -255,6 +273,7 @@ gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std:
         }
         graph.push_back(mono_factor);
         factor_indecies_dict_[std::make_pair(mono_factor.keys()[0], mono_factor.keys()[1])] = current_index_++;
+          cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    MONO-"  << endl;
         break;
       }
       case FactorType::STEREO: {
@@ -272,6 +291,9 @@ gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std:
           }
         }
         graph.push_back(stereo_factor);
+
+          cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    STEREO-"  << endl;
+
         factor_indecies_dict_[std::make_pair(stereo_factor.keys()[0], stereo_factor.keys()[1])] = current_index_++;
         break;
       }
@@ -280,13 +302,14 @@ gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std:
   std::cout << "createFactorGraph - size: " << graph.size() << std::endl;
   if (!is_incremental) {
     session_factors_ = new_active_factors;
-
+      cout << "new_active_factors.size() = " << new_active_factors.size() << endl;
     for (const auto &it: del_states_) {
       if (session_values_.find(it) != session_values_.end()) {
         session_values_.erase(it);
       }
     }
   }
+
   return graph;
 }
 
@@ -340,6 +363,7 @@ void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *>
     std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
     std::string pathLAF = "/usr/ANPLprefix/orb-slam2/LandafterKey.txt";
     std::string pathLBF = "/usr/ANPLprefix/orb-slam2/LandbeforeKey.txt";
+
     //long unsigned int KFid = 0;
     for (const auto &pKF: vpKFs) {
         if (pKF->isBad())
@@ -364,6 +388,7 @@ void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *>
     }
   gtsam::serializeToFile(session_values_, pathLAF);
   gtsam::serializeToFile(values_before_transf, pathLBF);
+
 }
 void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
   // Create keyframe symbol
