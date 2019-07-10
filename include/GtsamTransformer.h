@@ -77,7 +77,7 @@ class GtsamTransformer {
   gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
   gtsam::Pose3 init_pose_robot;
 
-  /**
+    /**
    * Returns tuple contains:
    * 1. Boolean indicates if there is a new data or not
    * 2. Optional Boolean indicates if the data is incremental update
@@ -139,7 +139,7 @@ class GtsamTransformer {
                         std::string,
                         std::tuple<std::string, double, std::string>>> ready_data_queue_;
 
-  gtsam::NonlinearFactorGraph graph;
+  //gtsam::NonlinearFactorGraph graph;
   gtsam::Values session_values_, last_session_values_, values_before_transf;
   gtsam::Cal3_S2Stereo::shared_ptr cam_params_stereo_;
   gtsam::Cal3_S2::shared_ptr cam_params_mono_;
