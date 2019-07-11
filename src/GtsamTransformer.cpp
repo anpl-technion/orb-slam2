@@ -135,7 +135,7 @@ namespace ORB_SLAM2 {
             session_values_.clear();
             values_before_transf.clear();
 
-            graph = gtsam::NonlinearFactorGraph();
+            //graph = gtsam::NonlinearFactorGraph();
 
             add_factors_.clear();
             del_factors_.clear();
@@ -234,7 +234,6 @@ namespace ORB_SLAM2 {
                     gtsam::deserialize(it.first, prior_factor);
                     graph.push_back(prior_factor);
                     factor_indecies_dict_[std::make_pair(prior_factor.keys()[0], prior_factor.keys()[1])] = current_index_++;
-                    cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    PRIOIR-"  << endl;
                     break;
                 }
                 case FactorType::BETWEEN: {
@@ -253,7 +252,6 @@ namespace ORB_SLAM2 {
                     }
                     graph.push_back(between_factor);
                     factor_indecies_dict_[std::make_pair(between_factor.keys()[0], between_factor.keys()[1])] = current_index_++;
-                    cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    BETWEEN-"  << endl;
                     break;
                 }
                 case FactorType::MONO: {
@@ -272,7 +270,6 @@ namespace ORB_SLAM2 {
                     }
                     graph.push_back(mono_factor);
                     factor_indecies_dict_[std::make_pair(mono_factor.keys()[0], mono_factor.keys()[1])] = current_index_++;
-                    cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    MONO-"  << endl;
                     break;
                 }
                 case FactorType::STEREO: {
@@ -290,9 +287,6 @@ namespace ORB_SLAM2 {
                         }
                     }
                     graph.push_back(stereo_factor);
-
-                    cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&    STEREO-"  << endl;
-
                     factor_indecies_dict_[std::make_pair(stereo_factor.keys()[0], stereo_factor.keys()[1])] = current_index_++;
                     break;
                 }
@@ -308,7 +302,6 @@ namespace ORB_SLAM2 {
                 }
             }
         }
-
         return graph;
     }
 
@@ -363,7 +356,6 @@ namespace ORB_SLAM2 {
         std::string pathLAF = "/usr/ANPLprefix/orb-slam2/LandafterKey.txt";
         std::string pathLBF = "/usr/ANPLprefix/orb-slam2/LandbeforeKey.txt";
 
-        //long unsigned int KFid = 0;
         for (const auto &pKF: vpKFs) {
             if (pKF->isBad())
                 continue;
