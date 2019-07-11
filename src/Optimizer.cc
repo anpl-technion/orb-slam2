@@ -49,6 +49,8 @@ void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopF
 void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<MapPoint *> &vpMP,
                                  int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust, GtsamTransformer *gtsam_transformer)
 {
+  cout << "Enter Bundle Adjustment Optimizer" << endl;
+
   vector<bool> vbNotIncludedMP;
   vbNotIncludedMP.resize(vpMP.size());
 
@@ -63,8 +65,9 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
   optimizer.setAlgorithm(solver);
 
   if(pbStopFlag)
-    optimizer.setForceStopFlag(pbStopFlag);
+      optimizer.setForceStopFlag(pbStopFlag);
 
+  cout << "Inside Bundle Adjustment Optimizer: Step 1" << endl;
   long unsigned int maxKFid = 0;
 
   // Set KeyFrame vertices
@@ -84,7 +87,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
   const float thHuber2D = sqrt(5.99);
   const float thHuber3D = sqrt(7.815);
-
+  cout << "Inside Bundle Adjustment Optimizer: Step 2" << endl;
   // Set MapPoint vertices
   for(size_t i=0; i<vpMP.size(); i++)
   {
@@ -182,13 +185,13 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
       vbNotIncludedMP[i]=false;
     }
   }
-
+  cout << "Inside Bundle Adjustment Optimizer: Step 3" << endl;
   // Optimize!
   optimizer.initializeOptimization();
   optimizer.optimize(nIterations);
 
   // Recover optimized data
-
+    cout << "Inside Bundle Adjustment Optimizer: Step 4" << endl;
   //Keyframes
   for(size_t i=0; i<vpKFs.size(); i++)
   {
@@ -208,7 +211,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
       pKF->mnBAGlobalForKF = nLoopKF;
     }
   }
-
+    cout << "Inside Bundle Adjustment Optimizer: Step 5" << endl;
   //Points
   for(size_t i=0; i<vpMP.size(); i++)
   {
@@ -233,7 +236,20 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
       pMP->mnBAGlobalForKF = nLoopKF;
     }
   }
-  gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP);
+    cout << "Inside Bundle Adjustment Optimizer: Step 6" << endl;
+
+  /*while (1) {
+      try {
+          std::unique_lock<std::mutex> lock(gtsam_transformer->mutex_, std::try_to_lock);
+          break;
+      } catch (const std::system_error &e) {
+          std::cout << "Caught system_error with code " << e.code()
+                    << " meaning " << e.what() << '\n';
+      }
+      usleep(1000);
+  }
+  gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP);*/
+  cout << "Inside Bundle Adjustment Optimizer: Step end" << endl;
 }
 
 int Optimizer::PoseOptimization(Frame *pFrame)

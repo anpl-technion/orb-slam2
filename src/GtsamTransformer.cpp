@@ -128,22 +128,32 @@ namespace ORB_SLAM2 {
 
     bool GtsamTransformer::start() {
         std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
+        cout << "Inside start(): step 0" << endl;
         if (lock.owns_lock()) {
             logger_->info("start - new recovering session.");
+            cout << "Inside start(): step 1" << endl;
             add_states_.clear();
+            cout << "Inside start(): step 2" << endl;
             del_states_.clear();
+            cout << "Inside start(): step 3" << endl;
             session_values_.clear();
+            cout << "Inside start(): step 4" << endl;
             values_before_transf.clear();
+            cout << "Inside start(): step 5" << endl;
 
             //graph = gtsam::NonlinearFactorGraph();
 
             add_factors_.clear();
+            cout << "Inside start(): step 6" << endl;
             del_factors_.clear();
+            cout << "Inside start(): step 7" << endl;
             session_factors_.clear();
+            cout << "Inside start(): step 8" << endl;
             return true;
         } else {
             logger_->warn("start - can't own mutex. returns");
         }
+        cout << "Inside start(): step 9" << endl;
         return false;
     }
 
@@ -347,9 +357,10 @@ namespace ORB_SLAM2 {
     }
 
     void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *> &vpKFs, const vector<ORB_SLAM2::MapPoint *> &vpMP) {
+        cout << "transformGraphToGtsam: Before start() " << endl;
         if (!start())
             return;
-
+        cout << "transformGraphToGtsam: After start()" << endl;
         ofstream myfile;
         std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
         std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
@@ -362,7 +373,7 @@ namespace ORB_SLAM2 {
             updateKeyFrame(pKF, true);
 
         }
-
+        cout << "transformGraphToGtsam: After updateKeyFrame() for loop" << endl;
         gtsam::serializeToFile(session_values_, pathAF);
         gtsam::serializeToFile(values_before_transf, pathBF);
 
@@ -373,10 +384,13 @@ namespace ORB_SLAM2 {
             const std::map<KeyFrame *, size_t> observations = pMP->GetObservations();
             updateObservations(pMP, observations);
         }
+        cout << "transformGraphToGtsam: After updateLandmark() and updateObservations() for loop" << endl;
         calculateDiffrencesBetweenValueSets();
+        cout << "transformGraphToGtsam: After calculateDiffrencesBetweenValueSets()" << endl;
         calculateDiffrencesBetweenFactorSets();
+        cout << "transformGraphToGtsam: After calculateDiffrencesBetweenFactorSets()" << endl;
         finish();
-
+        cout << "transformGraphToGtsam: After finish()" << endl;
         gtsam::serializeToFile(session_values_, pathLAF);
         gtsam::serializeToFile(values_before_transf, pathLBF);
 
