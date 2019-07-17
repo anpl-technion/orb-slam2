@@ -141,6 +141,7 @@ namespace ORB_SLAM2 {
         logger_->info("finish - ending recovering session. new_optimized_data is now available");
         logger_->info("finish - active states set size: {}", session_values_.size());
         logger_->info("finish - active factors vector size: {}", session_factors_.size());
+        gtsam::KeyVector key_del_fac_first,key_del_fac_second; //Andrej, vector of keys for deleted FACTORS
         if (update_type_ == INCREMENTAL) {
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
@@ -158,18 +159,25 @@ namespace ORB_SLAM2 {
             auto active_factor_graph = createFactorGraph(session_factors_, false);
             std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
             gtsam::serializeToFile(active_factor_graph, pathFGAF);
+
+            //createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
+
             ready_data_queue_.emplace(true,
                                       false,
                                       gtsam::serialize(active_factor_graph),
-                                      createDeletedFactorsIndicesVec(del_factors_),
+                                      //gtsam::serialize(key_del_fac_first),
+                                      //gtsam::serialize(key_del_fac_second),
+                                      createDeletedFactorsIndicesVec(del_factors_), // this will be removed
                                       add_states_,
                                       del_states_,
                                       gtsam::serialize(session_values_),
                                       recent_kf_);
         }
 
+        createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
         cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
         cout << del_factors_.size() << "    del_factors_.size" <<std::endl;
+        cout << key_del_fac_first.size() << " keyvector size " << std::endl;
         cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
         logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
 
@@ -306,25 +314,24 @@ namespace ORB_SLAM2 {
         return createFactorGraph(ser_factors_vec, is_incremental);
     }
 
+    void GtsamTransformer::createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyVector& k1, gtsam::KeyVector& k2) {
+        for (const auto &it: del_factors) {
+            k1.push_back(it.first);
+            k2.push_back(it.second);
+        }
+
+    }
+
     std::vector<size_t> GtsamTransformer::createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors) {
         std::vector<size_t> deleted_factors_indecies;
-
         for (const auto &it: del_factors) {
             auto dict_it = factor_indecies_dict_.find(it);
-
-
             if (dict_it != factor_indecies_dict_.end()) {
                 deleted_factors_indecies.push_back(dict_it->second);
 
                 gtsam::Symbol key1(it.first);
                 gtsam::Symbol key2(it.second);
                 std::cout << "createDeletedFactorsIndicesVec - " << key1.chr() << key1.index() << "-" << key2.chr() << key2.index() << " index: "
-                          << dict_it->second << std::endl;
-            } else {
-
-                gtsam::Symbol key1(it.first);
-                gtsam::Symbol key2(it.second);
-                std::cout << "dict not contains a factor with keys: " << key1.chr() << key1.index() << "-" << key2.chr() << key2.index() << " index: "
                           << dict_it->second << std::endl;
             }
         }
