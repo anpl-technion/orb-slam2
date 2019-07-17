@@ -28,10 +28,7 @@ namespace ORB_SLAM2 {
 
 
         // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
-        gtsam::Quaternion quat(0.5,
-                               -0.5,
-                               0.5,
-                               -0.5);
+        gtsam::Quaternion quat(0.5, -0.5, 0.5, -0.5);
         gtsam::Point3 point(0.21, -0.06, 0.17);
         sensor_to_body_temp = gtsam::Pose3(quat, point);
 
@@ -54,16 +51,6 @@ namespace ORB_SLAM2 {
         // Create landmark observation
         gtsam::Point2 obs_gtsam(obs(0), obs(1));
 
-        /*// Create factor graph
-        gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2>
-        factor_in_cam(obs_gtsam,
-               gtsam::noiseModel::Diagonal::Variances(Eigen::Vector2d(1 / inv_sigma_2, 1 / inv_sigma_2)),
-               keyframe_sym.key(),
-               landmark_sym.key(),
-               cam_params_mono_); // idendity sensor to body
-
-        session_factors_before[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor_in_cam), FactorType::MONO);
-    */
         // Create factor graph
         gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2>
                 factor(obs_gtsam,
@@ -128,27 +115,16 @@ namespace ORB_SLAM2 {
 
     bool GtsamTransformer::start() {
         std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
-        cout << "Inside start(): step 0" << endl;
         if (lock.owns_lock()) {
             logger_->info("start - new recovering session.");
-            cout << "Inside start(): step 1" << endl;
             add_states_.clear();
-            cout << "Inside start(): step 2" << endl;
             del_states_.clear();
-            cout << "Inside start(): step 3" << endl;
             session_values_.clear();
-            cout << "Inside start(): step 4" << endl;
             values_before_transf.clear();
-            cout << "Inside start(): step 5" << endl;
-
-            //graph = gtsam::NonlinearFactorGraph();
 
             add_factors_.clear();
-            cout << "Inside start(): step 6" << endl;
             del_factors_.clear();
-            cout << "Inside start(): step 7" << endl;
             session_factors_.clear();
-            cout << "Inside start(): step 8" << endl;
             return true;
         } else {
             logger_->warn("start - can't own mutex. returns");
@@ -178,6 +154,7 @@ namespace ORB_SLAM2 {
                                       recent_kf_);
         } else if (update_type_ == BATCH) {
             // Batch update
+
             auto active_factor_graph = createFactorGraph(session_factors_, false);
             std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
             gtsam::serializeToFile(active_factor_graph, pathFGAF);
@@ -190,6 +167,10 @@ namespace ORB_SLAM2 {
                                       gtsam::serialize(session_values_),
                                       recent_kf_);
         }
+
+        cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+        cout << del_factors_.size() << "    del_factors_.size" <<std::endl;
+        cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
         logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
 
 
@@ -198,7 +179,7 @@ namespace ORB_SLAM2 {
                   << " del_factors.size: " << del_factors_.size() << " add_states.size: " << add_states_.size() << " del_states.size: "
                   << del_states_.size() << " values.size: " << session_values_.size() << " last_values.size: " << last_session_values_.size() << std::endl;
 
-        //std::printf("*************************************finish!!!\n");
+
 
         last_session_values_ = session_values_;
         last_session_factors_ = session_factors_;
@@ -338,6 +319,9 @@ namespace ORB_SLAM2 {
                           << dict_it->second << std::endl;
             }
         }
+        cout << "#############################################################" << std::endl;
+        cout << deleted_factors_indecies.size() << "    deleted_factors_indecies.size" <<std::endl;
+        cout << "##############################################################" << std::endl;
         return deleted_factors_indecies;
     }
 
@@ -357,10 +341,9 @@ namespace ORB_SLAM2 {
     }
 
     void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *> &vpKFs, const vector<ORB_SLAM2::MapPoint *> &vpMP) {
-        cout << "transformGraphToGtsam: Before start() " << endl;
         if (!start())
             return;
-        cout << "transformGraphToGtsam: After start()" << endl;
+
         ofstream myfile;
         std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
         std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
@@ -384,13 +367,10 @@ namespace ORB_SLAM2 {
             const std::map<KeyFrame *, size_t> observations = pMP->GetObservations();
             updateObservations(pMP, observations);
         }
-        cout << "transformGraphToGtsam: After updateLandmark() and updateObservations() for loop" << endl;
+
         calculateDiffrencesBetweenValueSets();
-        cout << "transformGraphToGtsam: After calculateDiffrencesBetweenValueSets()" << endl;
         calculateDiffrencesBetweenFactorSets();
-        cout << "transformGraphToGtsam: After calculateDiffrencesBetweenFactorSets()" << endl;
         finish();
-        cout << "transformGraphToGtsam: After finish()" << endl;
         gtsam::serializeToFile(session_values_, pathLAF);
         gtsam::serializeToFile(values_before_transf, pathLBF);
 
