@@ -308,14 +308,23 @@ namespace ORB_SLAM2 {
 
     std::vector<size_t> GtsamTransformer::createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors) {
         std::vector<size_t> deleted_factors_indecies;
+
         for (const auto &it: del_factors) {
             auto dict_it = factor_indecies_dict_.find(it);
+
+
             if (dict_it != factor_indecies_dict_.end()) {
                 deleted_factors_indecies.push_back(dict_it->second);
 
                 gtsam::Symbol key1(it.first);
                 gtsam::Symbol key2(it.second);
                 std::cout << "createDeletedFactorsIndicesVec - " << key1.chr() << key1.index() << "-" << key2.chr() << key2.index() << " index: "
+                          << dict_it->second << std::endl;
+            } else {
+
+                gtsam::Symbol key1(it.first);
+                gtsam::Symbol key2(it.second);
+                std::cout << "dict not contains a factor with keys: " << key1.chr() << key1.index() << "-" << key2.chr() << key2.index() << " index: "
                           << dict_it->second << std::endl;
             }
         }
