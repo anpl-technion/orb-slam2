@@ -85,10 +85,10 @@ class GtsamTransformer {
             const gtsam::KeyList,
             std::string,
             std::tuple<std::string, double, std::string>,
-            std::string,                       //added keyvectors for removed factors
-            std::string> > dataQueueTuple;
+            gtsam::KeyVector,                      //added keyvectors for removed factors
+            gtsam::KeyVector> > dataQueueTuple;    //added keyvectors for removed factors
 
-    dataQueueTuple ready_data_queue_;  //added keyvectors for removed factors
+    dataQueueTuple ready_data_queue_;
 
     typedef std::tuple<bool,
             boost::optional<bool>,
@@ -98,8 +98,8 @@ class GtsamTransformer {
             boost::optional<const gtsam::KeyList>,
             boost::optional<std::string>,
             boost::optional<std::tuple<std::string, double, std::string>>,
-                    boost::optional<std::string>,                     //added keyvectors for removed factors
-                    boost::optional<std::string> > returnedTuple;   //added keyvectors for removed factors
+            boost::optional<gtsam::KeyVector>,                     //added keyvectors for removed factors
+            boost::optional<gtsam::KeyVector>> returnedTuple;      //added keyvectors for removed factors
 
     /**
    * Returns tuple contains:
@@ -152,7 +152,7 @@ class GtsamTransformer {
   gtsam::NonlinearFactorGraph createFactorGraph(std::map<std::pair<gtsam::Key, gtsam::Key>, std::pair<std::string, FactorType>> ser_factors_map,
                                                 bool is_incremental);
   std::vector<size_t> createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors);
-  void createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyList& k1, gtsam::KeyList & k2);
+  void createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyVector& k1, gtsam::KeyVector & k2);
   // Private implementation of std::set_difference
   std::map<std::pair<gtsam::Key, gtsam::Key>, std::pair<std::string, FactorType>> getDifferenceSet(std::map<std::pair<gtsam::Key, gtsam::Key>,
                                                                                                             std::pair<std::string,
