@@ -152,7 +152,7 @@ class GtsamTransformer {
   gtsam::NonlinearFactorGraph createFactorGraph(std::map<std::pair<gtsam::Key, gtsam::Key>, std::pair<std::string, FactorType>> ser_factors_map,
                                                 bool is_incremental);
   std::vector<size_t> createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors);
-  void createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyVector& k1, gtsam::KeyVector& k2);
+  void createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyList& k1, gtsam::KeyList & k2);
   // Private implementation of std::set_difference
   std::map<std::pair<gtsam::Key, gtsam::Key>, std::pair<std::string, FactorType>> getDifferenceSet(std::map<std::pair<gtsam::Key, gtsam::Key>,
                                                                                                             std::pair<std::string,

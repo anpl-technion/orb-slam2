@@ -134,7 +134,7 @@ namespace ORB_SLAM2 {
         logger_->info("finish - ending recovering session. new_optimized_data is now available");
         logger_->info("finish - active states set size: {}", session_values_.size());
         logger_->info("finish - active factors vector size: {}", session_factors_.size());
-        gtsam::KeyVector key_del_fac_first,key_del_fac_second; //Andrej, vector of keys for deleted FACTORS
+        gtsam::KeyList key_del_fac_first,key_del_fac_second; // List of keys for deleted FACTORS
         createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
         if (update_type_ == INCREMENTAL) {
             // Incremental update
@@ -300,7 +300,7 @@ namespace ORB_SLAM2 {
         return createFactorGraph(ser_factors_vec, is_incremental);
     }
 
-    void GtsamTransformer::createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyVector& k1, gtsam::KeyVector& k2) {
+    void GtsamTransformer::createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors, gtsam::KeyList& k1, gtsam::KeyList& k2) {
         for (const auto &it: del_factors) {
             k1.push_back(it.first);
             k2.push_back(it.second);
