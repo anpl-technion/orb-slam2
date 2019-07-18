@@ -88,17 +88,10 @@ namespace ORB_SLAM2 {
         session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::STEREO);
     }
 
-    std::tuple<bool,
-            boost::optional<bool>,
-            boost::optional<std::string>,
-            boost::optional<std::vector<size_t>>,
-            boost::optional<const gtsam::KeyList>,
-            boost::optional<const gtsam::KeyList>,
-            boost::optional<std::string>,
-            boost::optional<std::tuple<std::string, double, std::string>>> GtsamTransformer::checkForNewData() {
+    GtsamTransformer::returnedTuple GtsamTransformer::checkForNewData() {
         if (ready_data_queue_.empty()) {
             logger_->debug("checkForNewData - there is no new data.");
-            return std::make_tuple(false, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none);
+            return std::make_tuple(false, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none,boost::none,boost::none);
         }
         std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
         if (lock.owns_lock()) {
@@ -109,7 +102,7 @@ namespace ORB_SLAM2 {
             return data;
         } else {
             logger_->error("checkForNewData - can't own mutex. returning false");
-            return std::make_tuple(false, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none);
+            return std::make_tuple(false, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none,boost::none,boost::none);
         }
     }
 
@@ -142,6 +135,7 @@ namespace ORB_SLAM2 {
         logger_->info("finish - active states set size: {}", session_values_.size());
         logger_->info("finish - active factors vector size: {}", session_factors_.size());
         gtsam::KeyVector key_del_fac_first,key_del_fac_second; //Andrej, vector of keys for deleted FACTORS
+        createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
         if (update_type_ == INCREMENTAL) {
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
@@ -152,33 +146,25 @@ namespace ORB_SLAM2 {
                                       add_states_,
                                       del_states_,
                                       gtsam::serialize(session_values_),
-                                      recent_kf_);
+                                      recent_kf_,
+                                      gtsam::serialize(key_del_fac_first),       // added to replace createDeletedFactorsIndicesVec
+                                      gtsam::serialize(key_del_fac_second));     // added to replace createDeletedFactorsIndicesVec
         } else if (update_type_ == BATCH) {
             // Batch update
-
             auto active_factor_graph = createFactorGraph(session_factors_, false);
             std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
             gtsam::serializeToFile(active_factor_graph, pathFGAF);
-
-            //createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
-
             ready_data_queue_.emplace(true,
                                       false,
                                       gtsam::serialize(active_factor_graph),
-                                      //gtsam::serialize(key_del_fac_first),
-                                      //gtsam::serialize(key_del_fac_second),
-                                      createDeletedFactorsIndicesVec(del_factors_), // this will be removed
+                                      createDeletedFactorsIndicesVec(del_factors_), // this dummy function
                                       add_states_,
                                       del_states_,
                                       gtsam::serialize(session_values_),
-                                      recent_kf_);
+                                      recent_kf_,
+                                      gtsam::serialize(key_del_fac_first),       // added to replace createDeletedFactorsIndicesVec
+                                      gtsam::serialize(key_del_fac_second));     // added to replace createDeletedFactorsIndicesVec
         }
-
-        createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
-        cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-        cout << del_factors_.size() << "    del_factors_.size" <<std::endl;
-        cout << key_del_fac_first.size() << " keyvector size " << std::endl;
-        cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
         logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
 
 
@@ -324,7 +310,7 @@ namespace ORB_SLAM2 {
 
     std::vector<size_t> GtsamTransformer::createDeletedFactorsIndicesVec(std::vector<std::pair<gtsam::Key, gtsam::Key>> &del_factors) {
         std::vector<size_t> deleted_factors_indecies;
-        for (const auto &it: del_factors) {
+        /*for (const auto &it: del_factors) {
             auto dict_it = factor_indecies_dict_.find(it);
             if (dict_it != factor_indecies_dict_.end()) {
                 deleted_factors_indecies.push_back(dict_it->second);
@@ -334,10 +320,7 @@ namespace ORB_SLAM2 {
                 std::cout << "createDeletedFactorsIndicesVec - " << key1.chr() << key1.index() << "-" << key2.chr() << key2.index() << " index: "
                           << dict_it->second << std::endl;
             }
-        }
-        cout << "#############################################################" << std::endl;
-        cout << deleted_factors_indecies.size() << "    deleted_factors_indecies.size" <<std::endl;
-        cout << "##############################################################" << std::endl;
+        }*/
         return deleted_factors_indecies;
     }
 

@@ -77,6 +77,30 @@ class GtsamTransformer {
   gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
   gtsam::Pose3 init_pose_robot;
 
+    typedef std::queue<std::tuple<bool,
+            bool,
+            std::string,
+            std::vector<size_t>,
+            const gtsam::KeyList,
+            const gtsam::KeyList,
+            std::string,
+            std::tuple<std::string, double, std::string>,
+            std::string,                       //added keyvectors for removed factors
+            std::string> > dataQueueTuple;
+
+    dataQueueTuple ready_data_queue_;  //added keyvectors for removed factors
+
+    typedef std::tuple<bool,
+            boost::optional<bool>,
+            boost::optional<std::string>,
+            boost::optional<std::vector<size_t>>,
+            boost::optional<const gtsam::KeyList>,
+            boost::optional<const gtsam::KeyList>,
+            boost::optional<std::string>,
+            boost::optional<std::tuple<std::string, double, std::string>>,
+                    boost::optional<std::string>,                     //added keyvectors for removed factors
+                    boost::optional<std::string> > returnedTuple;   //added keyvectors for removed factors
+
     /**
    * Returns tuple contains:
    * 1. Boolean indicates if there is a new data or not
@@ -87,15 +111,22 @@ class GtsamTransformer {
    * 6. Optional GTSAM KeyList contains the keys of the removed states (keyframes/landmarks) since the last call to the function
    * 7. Optional GTSAM Values object contains the values of entire graph (serialized)
    * 8. Optional tuple of the most recent keyframe symbol (serialized), its timestamp, and its Pose3 (serialized)
+     *  9. Optional string contains graph of the removed factors first key  (serialized)
+     * 10. Optional string contains graph of the removed factors second key  (serialized)
    **/
-  std::tuple<bool,
-             boost::optional<bool>,
-             boost::optional<std::string>,
-             boost::optional<std::vector<size_t>>,
-             boost::optional<const gtsam::KeyList>,
-             boost::optional<const gtsam::KeyList>,
-             boost::optional<std::string>,
-             boost::optional<std::tuple<std::string, double, std::string>>> checkForNewData();
+//  std::tuple<bool,
+//             boost::optional<bool>,
+//             boost::optional<std::string>,
+//             boost::optional<std::vector<size_t>>,
+//             boost::optional<const gtsam::KeyList>,
+//             boost::optional<const gtsam::KeyList>,
+//             boost::optional<std::string>,
+//             boost::optional<std::tuple<std::string, double, std::string> >> checkForNewData();
+
+
+
+  returnedTuple checkForNewData();
+
 
   void setUpdateType(const UpdateType update_type);
 
@@ -131,14 +162,9 @@ class GtsamTransformer {
                                                                                                                       FactorType>> &set_B);
   gtsam::KeyList getDifferenceKeyList(const gtsam::KeyList &list_A, const gtsam::KeyList &list_B);
 
-  std::queue<std::tuple<bool,
-                        bool,
-                        std::string,
-                        std::vector<size_t>,
-                        const gtsam::KeyList,
-                        const gtsam::KeyList,
-                        std::string,
-                        std::tuple<std::string, double, std::string>>> ready_data_queue_;
+
+
+
 
   //gtsam::NonlinearFactorGraph graph;
   gtsam::Values session_values_, last_session_values_, values_before_transf;
