@@ -136,9 +136,11 @@ namespace ORB_SLAM2 {
         logger_->info("finish - active factors vector size: {}", session_factors_.size());
         gtsam::KeyVector key_del_fac_first,key_del_fac_second; // List of keys for deleted FACTORS
         createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
+        std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
         if (update_type_ == INCREMENTAL) {
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
+            gtsam::serializeToFile(incremental_factor_graph, pathFGAF);
             ready_data_queue_.emplace(true,
                                       true,
                                       gtsam::serialize(incremental_factor_graph),
@@ -152,7 +154,6 @@ namespace ORB_SLAM2 {
         } else if (update_type_ == BATCH) {
             // Batch update
             auto active_factor_graph = createFactorGraph(session_factors_, false);
-            std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
             gtsam::serializeToFile(active_factor_graph, pathFGAF);
             ready_data_queue_.emplace(true,
                                       false,
@@ -166,6 +167,7 @@ namespace ORB_SLAM2 {
                                       key_del_fac_second);     // added to replace createDeletedFactorsIndicesVec
         }
         logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
+
 
 
         std::cout << "finish - session_factors.size: " << session_factors_.size() << " last_session_factors.size: " << last_session_factors_.size()
