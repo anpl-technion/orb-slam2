@@ -354,7 +354,7 @@ namespace ORB_SLAM2 {
         for (const auto &pKF: vpKFs) {
             if (pKF->isBad())
                 continue;
-            updateKeyFrame(pKF, true);
+            updateKeyFrame(pKF, false); // Elad: bool condition for creating between fac using last opt values (true- use, false- guess what)
 
         }
         cout << "transformGraphToGtsam: After updateKeyFrame() for loop" << endl;
