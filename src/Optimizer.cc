@@ -567,11 +567,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vSE3->setId(pKFi->mnId);
     vSE3->setFixed(pKFi->mnId==0);
     optimizer.addVertex(vSE3);
-      if (DEBUG) {
-          ofs << "VertexSE3Expmap" << " " << vSE3->id() << " ";
-          vSE3->write(ofs);
-          ofs << endl;
-      }
+
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
   }
@@ -585,11 +581,6 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vSE3->setId(pKFi->mnId);
     vSE3->setFixed(true);
     optimizer.addVertex(vSE3);
-      if (DEBUG) {
-          ofs << "VertexSE3Expmap" << " " << vSE3->id() << " ";
-          vSE3->write(ofs);
-          ofs << endl;
-      }
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
   }
@@ -627,11 +618,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vPoint->setId(id);
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
-      if (DEBUG) {
-          ofs << "VertexSBAPointXYZ" << " " << vPoint->id() << " ";
-          vPoint->write(ofs);
-          ofs << endl;
-      }
+
     const map<KeyFrame*,size_t> observations = pMP->GetObservations();
 
     //Set edges
@@ -722,16 +709,6 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
   if(pbStopFlag)
     if(*pbStopFlag)
       return;
-
-  // Export G2O --- YAY
-  //optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt"); // does not work, needs to register types of states and measurements
-  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
-  gtsam::Values::shared_ptr g2ovalues;
-  bool is3D = true;
-  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
-
-  gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
-  gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
 
   optimizer.initializeOptimization();
   optimizer.optimize(5);
@@ -842,6 +819,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKF->mnId));
     g2o::SE3Quat SE3quat = vSE3->estimate();
     pKF->SetPose(Converter::toCvMat(SE3quat));
+      if (DEBUG) {
+          ofs << "VertexSE3Expmap" << " " << vSE3->id() << " ";
+          vSE3->write(ofs);
+          ofs << endl;
+      }
   }
 
   //Points
@@ -851,7 +833,24 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->mnId+maxKFid+1));
     pMP->SetWorldPos(Converter::toCvMat(vPoint->estimate()));
     pMP->UpdateNormalAndDepth();
+
+      if (DEBUG) {
+          ofs << "VertexSBAPointXYZ" << " " << vPoint->id() << " ";
+          vPoint->write(ofs);
+          ofs << endl;
+      }
   }
+
+    // Export G2O --- YAY
+    //optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt"); // does not work yet, needs to register types of states and measurements
+    gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
+    gtsam::Values::shared_ptr g2ovalues;
+    bool is3D = true;
+    boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
+
+    gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
+    gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
+
   gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
 }
 
