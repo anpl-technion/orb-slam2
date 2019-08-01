@@ -33,7 +33,7 @@
 #include "Converter.h"
 
 #include<mutex>
-
+#include <gtsam/slam/dataset.h>
 namespace ORB_SLAM2
 {
 
@@ -186,9 +186,22 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     }
   }
   cout << "Inside Bundle Adjustment Optimizer: Step 3" << endl;
+
   // Optimize!
   optimizer.initializeOptimization();
+
+  // TODO: Export G2O --- YAY
+  optimizer.save("g2o.txt");
+  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
+  gtsam::Values::shared_ptr g2ovalues;
+  bool is3D = true;
+  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
+
+  gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
+  gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
+
   optimizer.optimize(nIterations);
+
 
   // Recover optimized data
     cout << "Inside Bundle Adjustment Optimizer: Step 4" << endl;

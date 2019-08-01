@@ -136,13 +136,13 @@ namespace ORB_SLAM2 {
         logger_->info("finish - active factors vector size: {}", session_factors_.size());
         gtsam::KeyVector key_del_fac_first,key_del_fac_second; // List of keys for deleted FACTORS
         createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
-        std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
+        //std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
         if (update_type_ == INCREMENTAL) {
 
             std::cout << "ORBSLAM: INCREMENTAL MODE\n";
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
-            gtsam::serializeToFile(incremental_factor_graph, pathFGAF);
+            //gtsam::serializeToFile(incremental_factor_graph, pathFGAF);
             ready_data_queue_.emplace(true,
                                       true,
                                       gtsam::serialize(incremental_factor_graph),
@@ -158,7 +158,7 @@ namespace ORB_SLAM2 {
             std::cout << "ORBSLAM: BATCH MODE\n";
             // Batch update
             auto active_factor_graph = createFactorGraph(session_factors_, false);
-            gtsam::serializeToFile(active_factor_graph, pathFGAF);
+            //gtsam::serializeToFile(active_factor_graph, pathFGAF);
             ready_data_queue_.emplace(true,
                                       false,
                                       gtsam::serialize(active_factor_graph),
@@ -349,11 +349,11 @@ namespace ORB_SLAM2 {
         if (!start())
             return;
 
-        ofstream myfile;
-        std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
-        std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
-        std::string pathLAF = "/usr/ANPLprefix/orb-slam2/LandafterKey.txt";
-        std::string pathLBF = "/usr/ANPLprefix/orb-slam2/LandbeforeKey.txt";
+//        ofstream myfile;
+//        std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
+//        std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
+//        std::string pathLAF = "/usr/ANPLprefix/orb-slam2/LandafterKey.txt";
+//        std::string pathLBF = "/usr/ANPLprefix/orb-slam2/LandbeforeKey.txt";
 
         for (const auto &pKF: vpKFs) {
             if (pKF->isBad())
@@ -362,8 +362,8 @@ namespace ORB_SLAM2 {
 
         }
         cout << "transformGraphToGtsam: After updateKeyFrame() for loop" << endl;
-        gtsam::serializeToFile(session_values_, pathAF);
-        gtsam::serializeToFile(values_before_transf, pathBF);
+        //gtsam::serializeToFile(session_values_, pathAF);
+        //gtsam::serializeToFile(values_before_transf, pathBF);
 
         for (const auto &pMP: vpMP) {
             if (pMP->isBad())
@@ -376,8 +376,8 @@ namespace ORB_SLAM2 {
         calculateDiffrencesBetweenValueSets();
         calculateDiffrencesBetweenFactorSets();
         finish();
-        gtsam::serializeToFile(session_values_, pathLAF);
-        gtsam::serializeToFile(values_before_transf, pathLBF);
+        //gtsam::serializeToFile(session_values_, pathLAF);
+        //gtsam::serializeToFile(values_before_transf, pathLBF);
 
     }
     void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
