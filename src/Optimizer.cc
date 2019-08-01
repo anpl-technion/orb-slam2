@@ -190,7 +190,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
   // Optimize!
   optimizer.initializeOptimization();
 
-  // TODO: Export G2O --- YAY
+  /*// TODO: Export G2O --- YAY
   optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt");
   gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
   gtsam::Values::shared_ptr g2ovalues;
@@ -198,7 +198,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
   boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
 
   gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
-  gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
+  gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");*/
 
   optimizer.optimize(nIterations);
 
@@ -689,6 +689,17 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
       return;
 
   optimizer.initializeOptimization();
+
+  // Export G2O --- YAY
+  optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt");
+  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
+  gtsam::Values::shared_ptr g2ovalues;
+  bool is3D = true;
+  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
+
+  gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
+  gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
+
   optimizer.optimize(5);
 
   bool bDoMore= true;

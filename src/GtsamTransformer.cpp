@@ -379,6 +379,7 @@ namespace ORB_SLAM2 {
         //gtsam::serializeToFile(session_values_, pathLAF);
         //gtsam::serializeToFile(values_before_transf, pathLBF);
 
+
     }
     void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
         // Create keyframe symbol
