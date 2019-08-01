@@ -482,8 +482,11 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, GtsamTransformer *gtsam_transformer)
 {
 
-  ofstream ofs("/usr/ANPLprefix/orb-slam2/g2o.txt");
-  if (!ofs) return;
+    int DEBUG = 1;
+
+    ofstream ofs("/usr/ANPLprefix/orb-slam2/g2o.txt");
+    if (!ofs) return;
+
 
   auto vpKFs = pMap->GetAllKeyFrames();
   auto vpMP = pMap->GetAllMapPoints();
@@ -564,7 +567,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vSE3->setId(pKFi->mnId);
     vSE3->setFixed(pKFi->mnId==0);
     optimizer.addVertex(vSE3);
-    vSE3->write(ofs);
+      if (DEBUG) {
+          ofs << "VertexSE3Expmap" << " " << vSE3->id() << " ";
+          vSE3->write(ofs);
+          ofs << endl;
+      }
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
   }
@@ -578,7 +585,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vSE3->setId(pKFi->mnId);
     vSE3->setFixed(true);
     optimizer.addVertex(vSE3);
-    vSE3->write(ofs);
+      if (DEBUG) {
+          ofs << "VertexSE3Expmap" << " " << vSE3->id() << " ";
+          vSE3->write(ofs);
+          ofs << endl;
+      }
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
   }
@@ -616,7 +627,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vPoint->setId(id);
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
-    vPoint->write(ofs);
+      if (DEBUG) {
+          ofs << "VertexSBAPointXYZ" << " " << vPoint->id() << " ";
+          vPoint->write(ofs);
+          ofs << endl;
+      }
     const map<KeyFrame*,size_t> observations = pMP->GetObservations();
 
     //Set edges
@@ -652,7 +667,13 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->cy = pKFi->cy;
 
           optimizer.addEdge(e);
-          e->write(ofs);
+            if (DEBUG) {
+                ofs << "EdgeSE3ProjectXYZ" << " ";
+                ofs << e->vertex(0)->id() << " ";
+                ofs << e->vertex(1)->id() << " ";
+                e->write(ofs);
+                ofs << endl;
+            }
           vpEdgesMono.push_back(e);
           vpEdgeKFMono.push_back(pKFi);
           vpMapPointEdgeMono.push_back(pMP);
@@ -683,7 +704,13 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->bf = pKFi->mbf;
 
           optimizer.addEdge(e);
-          e->write(ofs);
+            if (DEBUG) {
+                ofs << "EdgeStereoSE3ProjectXYZ" << " ";
+                ofs << e->vertex(0)->id() << " ";
+                ofs << e->vertex(1)->id() << " ";
+                e->write(ofs);
+                ofs << endl;
+            }
           vpEdgesStereo.push_back(e);
           vpEdgeKFStereo.push_back(pKFi);
           vpMapPointEdgeStereo.push_back(pMP);
