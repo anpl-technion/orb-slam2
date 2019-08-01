@@ -191,7 +191,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
   optimizer.initializeOptimization();
 
   // TODO: Export G2O --- YAY
-  optimizer.save("g2o.txt");
+  optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt");
   gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
   gtsam::Values::shared_ptr g2ovalues;
   bool is3D = true;
