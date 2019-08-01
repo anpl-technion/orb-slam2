@@ -822,7 +822,7 @@ bool OptimizableGraph::saveVertex(std::ostream& os, OptimizableGraph::Vertex* v)
 {
   Factory* factory = Factory::instance();
   string tag = factory->tag(v);
-    std::cout << "Vertex tag: " << tag << std::endl;
+  //  std::cout << "Vertex tag: " << tag << std::endl;
   if (tag.size() > 0) {
     os << tag << " " << v->id() << " ";
     v->write(os);
@@ -849,14 +849,14 @@ bool OptimizableGraph::saveEdge(std::ostream& os, OptimizableGraph::Edge* e) con
 {
   Factory* factory = Factory::instance();
   string tag = factory->tag(e);
-  vector<string> tags;
+ /* vector<string> tags;
   factory->fillKnownTypes(tags);
     for (vector<string>::const_iterator it =tags.begin(); it != tags.end(); it++) {
         cout << *it << ", ";
     }
     cout << "\n";
 
-  std::cout << "Edge tag: " << tag << std::endl;
+  std::cout << "Edge tag: " << tag << std::endl;*/
   if (tag.size() > 0) {
     os << tag << " ";
     if (_edge_has_id)

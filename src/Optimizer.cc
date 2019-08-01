@@ -481,6 +481,10 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, GtsamTransformer *gtsam_transformer)
 {
+
+  ofstream ofs("/usr/ANPLprefix/orb-slam2/g2o.txt");
+  if (!ofs) return;
+
   auto vpKFs = pMap->GetAllKeyFrames();
   auto vpMP = pMap->GetAllMapPoints();
 
@@ -560,6 +564,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vSE3->setId(pKFi->mnId);
     vSE3->setFixed(pKFi->mnId==0);
     optimizer.addVertex(vSE3);
+    vSE3->write(ofs);
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
   }
@@ -573,6 +578,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vSE3->setId(pKFi->mnId);
     vSE3->setFixed(true);
     optimizer.addVertex(vSE3);
+    vSE3->write(ofs);
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
   }
@@ -610,7 +616,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     vPoint->setId(id);
     vPoint->setMarginalized(true);
     optimizer.addVertex(vPoint);
-
+    vPoint->write(ofs);
     const map<KeyFrame*,size_t> observations = pMP->GetObservations();
 
     //Set edges
@@ -646,6 +652,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->cy = pKFi->cy;
 
           optimizer.addEdge(e);
+          e->write(ofs);
           vpEdgesMono.push_back(e);
           vpEdgeKFMono.push_back(pKFi);
           vpMapPointEdgeMono.push_back(pMP);
@@ -676,6 +683,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->bf = pKFi->mbf;
 
           optimizer.addEdge(e);
+          e->write(ofs);
           vpEdgesStereo.push_back(e);
           vpEdgeKFStereo.push_back(pKFi);
           vpMapPointEdgeStereo.push_back(pMP);
@@ -688,10 +696,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     if(*pbStopFlag)
       return;
 
-  optimizer.initializeOptimization();
-
   // Export G2O --- YAY
-  optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt");
+  //optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt"); // does not work, needs to register types of states and measurements
   gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
   gtsam::Values::shared_ptr g2ovalues;
   bool is3D = true;
@@ -700,6 +706,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
   gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
   gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
 
+  optimizer.initializeOptimization();
   optimizer.optimize(5);
 
   bool bDoMore= true;
