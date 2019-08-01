@@ -138,6 +138,8 @@ namespace ORB_SLAM2 {
         createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
         std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
         if (update_type_ == INCREMENTAL) {
+
+            std::cout << "ORBSLAM: INCREMENTAL MODE\n";
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
             gtsam::serializeToFile(incremental_factor_graph, pathFGAF);
@@ -152,6 +154,8 @@ namespace ORB_SLAM2 {
                                       key_del_fac_first,       // added to replace createDeletedFactorsIndicesVec
                                       key_del_fac_second);     // added to replace createDeletedFactorsIndicesVec
         } else if (update_type_ == BATCH) {
+
+            std::cout << "ORBSLAM: BATCH MODE\n";
             // Batch update
             auto active_factor_graph = createFactorGraph(session_factors_, false);
             gtsam::serializeToFile(active_factor_graph, pathFGAF);

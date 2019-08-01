@@ -114,6 +114,7 @@ class GtsamTransformer {
      *  9. Optional string contains graph of the removed factors first key  (serialized)
      * 10. Optional string contains graph of the removed factors second key  (serialized)
    **/
+
 //  std::tuple<bool,
 //             boost::optional<bool>,
 //             boost::optional<std::string>,
