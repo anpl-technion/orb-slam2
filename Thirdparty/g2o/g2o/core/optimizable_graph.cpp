@@ -597,6 +597,9 @@ bool OptimizableGraph::save(ostream& os, int level) const
       for (vector<HyperGraph::Vertex*>::const_iterator it = e->vertices().begin(); it != e->vertices().end(); ++it) {
         verticesToSave.insert(static_cast<OptimizableGraph::Vertex*>(*it));
       }
+      std::cout << "Vertex WILL be saved\n";
+    } else {
+      std::cout << "Vertex will NOT be saved\n";
     }
   }
 
@@ -608,8 +611,11 @@ bool OptimizableGraph::save(ostream& os, int level) const
   EdgeContainer edgesToSave;
   for (HyperGraph::EdgeSet::const_iterator it = edges().begin(); it != edges().end(); ++it) {
     const OptimizableGraph::Edge* e = dynamic_cast<const OptimizableGraph::Edge*>(*it);
-    if (e->level() == level)
-      edgesToSave.push_back(const_cast<Edge*>(e));
+    if (e->level() == level) {
+      edgesToSave.push_back(const_cast<Edge *>(e));
+      std::cout << "Edge WILL be saved\n";
+    }
+    else std::cout << "Edge will NOT be saved\n";
   }
   sort(edgesToSave.begin(), edgesToSave.end(), EdgeIDCompare());
 
