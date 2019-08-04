@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿﻿﻿/**
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
@@ -583,6 +583,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     optimizer.addVertex(vSE3);
     if(pKFi->mnId>maxKFid)
       maxKFid=pKFi->mnId;
+    if (DEBUG) {
+      ofs << "VERTEX_SE3:QUAT_FIXED" << " " << vSE3->id() << " ";
+      vSE3->write(ofs);
+      ofs << endl;
+    }
   }
 
   // Set MapPoint vertices
