@@ -1,4 +1,4 @@
-﻿/**
+﻿﻿/**
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
@@ -692,7 +692,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
           optimizer.addEdge(e);
             if (DEBUG) {
-                ofs << "EdgeStereoSE3ProjectXYZ" << " ";
+                ofs << "EDGE_SE3:QUAT" << " ";
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
                 e->write(ofs);
@@ -820,7 +820,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     g2o::SE3Quat SE3quat = vSE3->estimate();
     pKF->SetPose(Converter::toCvMat(SE3quat));
       if (DEBUG) {
-          ofs << "VertexSE3Expmap" << " " << vSE3->id() << " ";
+          ofs << "VERTEX_SE3:QUAT" << " " << vSE3->id() << " ";
           vSE3->write(ofs);
           ofs << endl;
       }
