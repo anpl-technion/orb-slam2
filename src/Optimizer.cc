@@ -700,11 +700,18 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->cy = pKFi->cy;
           e->bf = pKFi->mbf;
 
+
           optimizer.addEdge(e);
             if (DEBUG) {
-                ofs << "EDGE_SE3:QUAT" << " ";
+                ofs << "EdgeStereoSE3ProjectXYZ" << " ";
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
+                ofs << e->fx << " ";
+                ofs << e->fy << " ";
+                ofs << 0 << " "; // TODO: get skew from camera K matrix
+                ofs << e->cx << " ";
+                ofs << e->cy << " ";
+                ofs << pKFi->mb << " ";
                 e->write(ofs);
                 ofs << endl;
             }
