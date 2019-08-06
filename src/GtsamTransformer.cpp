@@ -77,6 +77,9 @@ namespace ORB_SLAM2 {
         // Create landmark observation
         gtsam::StereoPoint2 obs_gtsam(obs(0), obs(2), obs(1));
 
+        gtsam::Matrix m;
+        m.transpose()
+
         // Create factor graph
         gtsam::GenericStereoFactor<gtsam::Pose3, gtsam::Point3>
                 factor(obs_gtsam,

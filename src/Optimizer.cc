@@ -657,6 +657,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->fy = pKFi->fy;
           e->cx = pKFi->cx;
           e->cy = pKFi->cy;
+          double skew = 0; // TODO skew
 
           optimizer.addEdge(e);
             if (DEBUG) {
@@ -664,11 +665,15 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
                 e->write(ofs);
+              ofs << e->fx << " " << e->fy << " " << skew << " " << e->cx << " " << e->cy << " " << pKFi->mb << " ";
+
                 ofs << endl;
             }
           vpEdgesMono.push_back(e);
           vpEdgeKFMono.push_back(pKFi);
           vpMapPointEdgeMono.push_back(pMP);
+          // save monocular factor
+
         }
         else // Stereo observation
         {
@@ -857,6 +862,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
 
   gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
+
 }
 
 
