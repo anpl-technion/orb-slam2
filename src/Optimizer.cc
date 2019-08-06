@@ -664,8 +664,13 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 ofs << "EdgeSE3ProjectXYZ" << " ";
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
+                ofs << pKFi->fx << " ";
+                ofs << pKFi->fy << " ";
+                ofs << skew << " "; // TODO: get skew from camera K matrix
+                ofs << pKFi->cx << " ";
+                ofs << pKFi->cy << " ";
+                ofs << pKFi->mb << " ";
                 e->write(ofs);
-              ofs << e->fx << " " << e->fy << " " << skew << " " << e->cx << " " << e->cy << " " << pKFi->mb << " ";
 
                 ofs << endl;
             }
@@ -699,18 +704,18 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           e->cx = pKFi->cx;
           e->cy = pKFi->cy;
           e->bf = pKFi->mbf;
-
+          double skew = 0; // TODO skew
 
           optimizer.addEdge(e);
             if (DEBUG) {
                 ofs << "EdgeStereoSE3ProjectXYZ" << " ";
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
-                ofs << e->fx << " ";
-                ofs << e->fy << " ";
-                ofs << 0 << " "; // TODO: get skew from camera K matrix
-                ofs << e->cx << " ";
-                ofs << e->cy << " ";
+                ofs << pKFi->fx << " ";
+                ofs << pKFi->fy << " ";
+                ofs << skew << " "; // TODO: get skew from camera K matrix
+                ofs << pKFi->cx << " ";
+                ofs << pKFi->cy << " ";
                 ofs << pKFi->mb << " ";
                 e->write(ofs);
                 ofs << endl;
