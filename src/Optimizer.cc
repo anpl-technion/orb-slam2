@@ -665,7 +665,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
                 e->write(ofs);
-                ofs << pKFi->fx << " ";
+                ofs << " " << pKFi->fx << " ";
                 ofs << pKFi->fy << " ";
                 ofs << skew << " "; // TODO: get skew from camera K matrix
                 ofs << pKFi->cx << " ";
@@ -710,7 +710,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
                 e->write(ofs);
-                ofs << pKFi->fx << " ";
+                ofs << " " << pKFi->fx << " ";
                 ofs << pKFi->fy << " ";
                 ofs << skew << " "; // TODO: get skew from camera K matrix
                 ofs << pKFi->cx << " ";
