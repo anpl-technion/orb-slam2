@@ -664,14 +664,12 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 ofs << "EdgeSE3ProjectXYZ" << " ";
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
+                e->write(ofs);
                 ofs << pKFi->fx << " ";
                 ofs << pKFi->fy << " ";
                 ofs << skew << " "; // TODO: get skew from camera K matrix
                 ofs << pKFi->cx << " ";
                 ofs << pKFi->cy << " ";
-                ofs << pKFi->mb << " ";
-                e->write(ofs);
-
                 ofs << endl;
             }
           vpEdgesMono.push_back(e);
@@ -711,13 +709,13 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                 ofs << "EdgeStereoSE3ProjectXYZ" << " ";
                 ofs << e->vertex(0)->id() << " ";
                 ofs << e->vertex(1)->id() << " ";
+                e->write(ofs);
                 ofs << pKFi->fx << " ";
                 ofs << pKFi->fy << " ";
                 ofs << skew << " "; // TODO: get skew from camera K matrix
                 ofs << pKFi->cx << " ";
                 ofs << pKFi->cy << " ";
                 ofs << pKFi->mb << " ";
-                e->write(ofs);
                 ofs << endl;
             }
           vpEdgesStereo.push_back(e);
