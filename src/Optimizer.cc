@@ -863,15 +863,18 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     // Export G2O --- YAY
     //optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt"); // does not work yet, needs to register types of states and measurements
-    gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
-    gtsam::Values::shared_ptr g2ovalues;
-    bool is3D = true;
-    boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
-    std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
-  std::cout << "  fg size" << g2ograph.get()->size() <<  std::endl;
+  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
+  gtsam::Values::shared_ptr g2ovalues;
+  bool is3D = true;
+  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
+  gtsam::NonlinearFactorGraph nonBoostFG = *g2ograph;
+  gtsam::Values nonBoostVal = *g2ovalues;
   std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
-    gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
-    gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
+  std::cout << "  fg size" << g2ograph.get()->size() <<  std::endl;
+  std::cout << "  fg size" << nonBoostFG.size() <<  std::endl;
+  std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
+  gtsam::serializeToFile(nonBoostFG, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
+  gtsam::serializeToFile(nonBoostVal, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
 
   gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
 
