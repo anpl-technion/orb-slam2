@@ -867,7 +867,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     gtsam::Values::shared_ptr g2ovalues;
     bool is3D = true;
     boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
-
+    std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
+  std::cout << "  fg size" << g2ograph.get()->size() <<  std::endl;
+  std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
     gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
     gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
 
