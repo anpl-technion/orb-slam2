@@ -34,6 +34,7 @@
 
 #include<mutex>
 #include <gtsam/slam/dataset.h>
+#include <gtsam/base/FastVector.h>
 namespace ORB_SLAM2
 {
 
@@ -189,19 +190,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
 
   // Optimize!
   optimizer.initializeOptimization();
-
-  /*// TODO: Export G2O --- YAY
-  optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt");
-  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
-  gtsam::Values::shared_ptr g2ovalues;
-  bool is3D = true;
-  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
-
-  gtsam::serializeToFile(g2ograph, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
-  gtsam::serializeToFile(g2ovalues, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");*/
-
   optimizer.optimize(nIterations);
-
 
   // Recover optimized data
     cout << "Inside Bundle Adjustment Optimizer: Step 4" << endl;
@@ -484,7 +473,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     int DEBUG = 1;
 
-    ofstream ofs("/usr/ANPLprefix/orb-slam2/g2o.txt");
+    ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
     if (!ofs) return;
 
 
@@ -523,7 +512,6 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
           }
     }
   }
-
   // Fixed Keyframes. Keyframes that see Local MapPoints but that are not Local Keyframes
   list<KeyFrame*> lFixedCameras;
   for(list<MapPoint*>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
@@ -866,15 +854,15 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
   gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
   gtsam::Values::shared_ptr g2ovalues;
   bool is3D = true;
-  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/g2o.txt", is3D);
+  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt", is3D);
   gtsam::NonlinearFactorGraph nonBoostFG = *g2ograph;
   gtsam::Values nonBoostVal = *g2ovalues;
+
+  gtsam::KeyVector tempK(nonBoostVal.keys());
+  int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
   std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
-  std::cout << "  fg size" << g2ograph.get()->size() <<  std::endl;
-  std::cout << "  fg size" << nonBoostFG.size() <<  std::endl;
-  std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
-  gtsam::serializeToFile(nonBoostFG, "/usr/ANPLprefix/orb-slam2/fg_g2o.txt");
-  gtsam::serializeToFile(nonBoostVal, "/usr/ANPLprefix/orb-slam2/val_g2o.txt");
+  gtsam::serializeToFile(nonBoostFG, "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o" + to_string(lastPoseIndex) + ".txt");
+  gtsam::serializeToFile(nonBoostVal, "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o" + to_string(lastPoseIndex) + ".txt");
 
   gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
 
