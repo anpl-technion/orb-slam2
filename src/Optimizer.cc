@@ -468,12 +468,16 @@ int Optimizer::PoseOptimization(Frame *pFrame)
   return nInitialCorrespondences-nBad;
 }
 
+int counter = 1;
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, GtsamTransformer *gtsam_transformer)
 {
 
     int DEBUG = 1;
 
     ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
+    ofstream ofsErase;
+    ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
+
     if (!ofs) return;
 
 
@@ -813,6 +817,10 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     {
       KeyFrame* pKFi = vToErase[i].first;
       MapPoint* pMPi = vToErase[i].second;
+        if (DEBUG) {
+            ofsErase << pKFi->mnId << " " << pMPi->mnId << " " << counter;
+            ofsErase << endl;
+        }
       pKFi->EraseMapPointMatch(pMPi);
       pMPi->EraseObservation(pKFi);
     }
@@ -851,21 +859,31 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     // Export G2O --- YAY
     //optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt"); // does not work yet, needs to register types of states and measurements
-  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
-  gtsam::Values::shared_ptr g2ovalues;
-  bool is3D = true;
-  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt", is3D);
-  gtsam::NonlinearFactorGraph nonBoostFG = *g2ograph;
-  gtsam::Values nonBoostVal = *g2ovalues;
+    gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
+    gtsam::Values::shared_ptr g2ovalues;
+    bool is3D = true;
+    boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt", is3D);
+    gtsam::NonlinearFactorGraph nonBoostFG = *g2ograph;
+    gtsam::Values nonBoostVal = *g2ovalues;
 
-  gtsam::KeyVector tempK(nonBoostVal.keys());
-  int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
-  std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
-  gtsam::serializeToFile(nonBoostFG, "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o" + to_string(lastPoseIndex) + ".txt");
-  gtsam::serializeToFile(nonBoostVal, "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o" + to_string(lastPoseIndex) + ".txt");
+    gtsam::KeyVector tempK(nonBoostVal.keys());
+    int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
+    std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
+    if (counter < 10)    {
+        gtsam::serializeToFile(nonBoostFG,
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_0" + to_string(counter) + ".txt");
+        gtsam::serializeToFile(nonBoostVal,
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_0" + to_string(counter) + ".txt");
+    } else {
 
+        gtsam::serializeToFile(nonBoostFG,
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_" + to_string(counter) + ".txt");
+        gtsam::serializeToFile(nonBoostVal,
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counter) + ".txt");
+    }
   gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
-
+  counter++;
+  ofsErase.close();
 }
 
 
