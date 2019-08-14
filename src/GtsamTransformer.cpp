@@ -361,7 +361,7 @@ namespace ORB_SLAM2 {
         for (const auto &pKF: vpKFs) {
             if (pKF->isBad())
                 continue;
-            updateKeyFrame(pKF, false); // Elad: bool condition for creating between fac using last opt values (true- use, false- guess what)
+            updateKeyFrame(pKF, true); // Elad: bool condition for creating between fac using last opt values (true- use, false- guess what)
 
         }
         cout << "transformGraphToGtsam: After updateKeyFrame() for loop" << endl;
@@ -459,6 +459,9 @@ namespace ORB_SLAM2 {
 
         gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
         session_values_.insert(sym.key(), p_gtsam);
+        gtsam::SharedNoiseModel model = gtsam::noiseModel::Gaussian::Information(2*gtsam::eye(3));
+
+        session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(gtsam::PriorFactor<gtsam::Point3>(sym.key(),p_gtsam,model)), FactorType::PRIOR);
     }
 
     void GtsamTransformer::updateObservations(MapPoint *pMP, const map<ORB_SLAM2::KeyFrame *, size_t> &observations) {
