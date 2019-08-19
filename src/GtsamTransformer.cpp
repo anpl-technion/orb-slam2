@@ -24,9 +24,14 @@ namespace ORB_SLAM2 {
                                              3);
 #ifdef DEBUG
         logger_->set_level(spdlog::level::debug);
+
+
 #else
         logger_->set_level(spdlog::level::info);
 #endif
+
+
+
         logger_->info("CTOR - GtsamTransformer instance created");
         between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 0.1, 0.1, 0.1)); // yaw(rad) , pitch(rad), roll(rad) ,x,y,z, Elad,Andrej
 
@@ -271,7 +276,10 @@ namespace ORB_SLAM2 {
     gtsam::NonlinearFactorGraph GtsamTransformer::createFactorGraph(std::vector<std::pair<std::string, FactorType>> ser_factors_vec,
                                                                     bool is_incremental) {
         // In use only in batch mode (not incremental)
+
         std::map<std::pair<gtsam::Key, gtsam::Key>, std::pair<std::string, FactorType>> new_active_factors;
+
+        bool useMonoFactors = false; // Flag for de/enabling Monocular factors , Elad
 
         if (!is_incremental) {
             current_index_ = 0;
@@ -305,22 +313,28 @@ namespace ORB_SLAM2 {
                     factor_indecies_dict_[std::make_pair(between_factor.keys()[0], between_factor.keys()[1])] = current_index_++;
                     break;
                 }
-                case FactorType::MONO: { //todo - comm out for debugging
-//                    gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2> mono_factor;
-//                    gtsam::deserialize(it.first, mono_factor);
-//                    if (!is_incremental && (del_factors_.size() > 0 || del_states_.size() > 0)) {
-//                        gtsam::Symbol first_sym(mono_factor.keys().at(0));
-//                        gtsam::Symbol second_sym(mono_factor.keys().at(1));
-//                        if ((std::find(del_factors_.begin(), del_factors_.end(), std::make_pair(first_sym.key(), second_sym.key())) != del_factors_.end())
-//                            || (std::find(del_states_.begin(), del_states_.end(), first_sym.key()) != del_states_.end())
-//                            || (std::find(del_states_.begin(), del_states_.end(), second_sym.key()) != del_states_.end())) {
-//                            break;
-//                        } else {
-//                            new_active_factors[std::make_pair(first_sym.key(), second_sym.key())] = it;
-//                        }
-//                    }
-//                    graph.push_back(mono_factor);
-//                    factor_indecies_dict_[std::make_pair(mono_factor.keys()[0], mono_factor.keys()[1])] = current_index_++;
+                case FactorType::MONO: {
+                    if(useMonoFactors) {
+                        gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2> mono_factor;
+                        gtsam::deserialize(it.first, mono_factor);
+                        if (!is_incremental && (del_factors_.size() > 0 || del_states_.size() > 0)) {
+                            gtsam::Symbol first_sym(mono_factor.keys().at(0));
+                            gtsam::Symbol second_sym(mono_factor.keys().at(1));
+                            if ((std::find(del_factors_.begin(), del_factors_.end(),
+                                           std::make_pair(first_sym.key(), second_sym.key())) != del_factors_.end())
+                                || (std::find(del_states_.begin(), del_states_.end(), first_sym.key()) !=
+                                    del_states_.end())
+                                || (std::find(del_states_.begin(), del_states_.end(), second_sym.key()) !=
+                                    del_states_.end())) {
+                                break;
+                            } else {
+                                new_active_factors[std::make_pair(first_sym.key(), second_sym.key())] = it;
+                            }
+                        }
+                        graph.push_back(mono_factor);
+                        factor_indecies_dict_[std::make_pair(mono_factor.keys()[0],
+                                                             mono_factor.keys()[1])] = current_index_++;
+                    }
                     break;
                 }
                 case FactorType::STEREO: {
@@ -499,8 +513,8 @@ namespace ORB_SLAM2 {
                     gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
                     gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);
                     session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
-                    cout << "transformGraphToGtsam: Adding between factor (xid, xid-1 )" << "(" << pKF->mnId << ", " << pKF->mnId-1  << ")" << endl;
-                } else {cout << "transformGraphToGtsam: KeyFrame does not exit in values (pKF->mnId - 1) " <<  pKF->mnId - 1  << endl;}
+
+                }
             }
         }
 
@@ -539,8 +553,8 @@ namespace ORB_SLAM2 {
                     gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
                     gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);
                     session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
-                    cout << "updateKeyFrameBetween: Adding between factor (xid, xid-1 )" << "(" << pKF->mnId << ", " << pKF->mnId-1  << ")" << endl;
-                } else {cout << "updateKeyFrameBetween: KeyFrame does not exit in values (pKF->mnId - 1) " <<  pKF->mnId - 1  << endl;}
+
+                }
             }
         }
 
