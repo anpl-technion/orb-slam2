@@ -9,9 +9,13 @@
 #include "Optimizer.h"
 
 #include "GtsamSerializationHelper.h"
+#include <string.h>
+
+
+
 
 //#define DEBUG
-
+int counter = 1;
 namespace ORB_SLAM2 {
     GtsamTransformer::GtsamTransformer() {
         logger_ = spdlog::rotating_logger_st("GtsamTransformer",
@@ -24,7 +28,7 @@ namespace ORB_SLAM2 {
         logger_->set_level(spdlog::level::info);
 #endif
         logger_->info("CTOR - GtsamTransformer instance created");
-        between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e2, 1e2, 1e2, 1, 1, 1));
+        between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 0.1, 0.1, 0.1)); // yaw(rad) , pitch(rad), roll(rad) ,x,y,z, Elad,Andrej
 
 
         // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
@@ -35,6 +39,7 @@ namespace ORB_SLAM2 {
         init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
     }
 
+    int MeasurmentTable[50000][3] = {-1};
     void GtsamTransformer::addMonoMeasurement(ORB_SLAM2::KeyFrame *pKF,
                                               ORB_SLAM2::MapPoint *pMP,
                                               Eigen::Matrix<double, 2, 1> &obs,
@@ -48,6 +53,16 @@ namespace ORB_SLAM2 {
         gtsam::Symbol keyframe_sym('x', pKF->mnId);
         gtsam::Symbol landmark_sym('l', pMP->mnId);
 
+        // add table entry
+        // pMP->mnI, S = 0, M = 1
+
+        int tmp = pMP->mnId;
+//        cout << "tmp = " << tmp;
+        MeasurmentTable[tmp][0]++;
+        MeasurmentTable[tmp][2] = pKF->mnId;
+//        cout << "  , MeasurmentTable[tmp] = " << MeasurmentTable[tmp][0] << "  " << MeasurmentTable[tmp][1] << endl;
+
+
         // Create landmark observation
         gtsam::Point2 obs_gtsam(obs(0), obs(1));
 
@@ -59,6 +74,7 @@ namespace ORB_SLAM2 {
                        landmark_sym.key(),
                        cam_params_mono_, sensor_to_body_temp);
         session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::MONO);
+
     }
 
     void GtsamTransformer::addStereoMeasurement(ORB_SLAM2::KeyFrame *pKF,
@@ -73,6 +89,14 @@ namespace ORB_SLAM2 {
         // Create both symbols
         gtsam::Symbol keyframe_sym('x', pKF->mnId);
         gtsam::Symbol landmark_sym('l', pMP->mnId);
+
+        // add table entry
+        // pMP->mnI, S = 1, M = 0
+        int tmp = pMP->mnId;
+//        cout << "tmp = " << tmp;
+        MeasurmentTable[tmp][1]++;
+        MeasurmentTable[tmp][2] = pKF->mnId;
+//        cout << "  , MeasurmentTable[tmp] = " << MeasurmentTable[tmp][0] << "  " << MeasurmentTable[tmp][1] << endl;
 
         // Create landmark observation
         gtsam::StereoPoint2 obs_gtsam(obs(0), obs(2), obs(1));
@@ -137,6 +161,38 @@ namespace ORB_SLAM2 {
         logger_->info("finish - ending recovering session. new_optimized_data is now available");
         logger_->info("finish - active states set size: {}", session_values_.size());
         logger_->info("finish - active factors vector size: {}", session_factors_.size());
+
+
+        //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        //@@@@@@@@@@ del all values connected to just mono factors     @@@@@@@@@@@@@@@@@
+
+        ofstream myfile;
+        std::string tmp_s = "0";
+        if (counter > 9) {
+            tmp_s = "";
+        }
+        std::string path = "/usr/ANPLprefix/orb-slam2/DEBUG/MeasurmentTable_" + tmp_s + std::to_string(counter) + ".txt";
+        myfile.open(path);
+        for(int count = 0; count < 50000; count ++){
+            if ((MeasurmentTable[count][0] !=0) || (MeasurmentTable[count][1] !=0)) {
+//                myfile << count <<  " " << MeasurmentTable[count][0] << " " << MeasurmentTable[count][1] << endl;
+                if ((MeasurmentTable[count][0] > 0) && (MeasurmentTable[count][1] == 0)){
+                    myfile << count <<  " " << MeasurmentTable[count][0] << " " << MeasurmentTable[count][1] << endl;
+                    gtsam::Symbol landmark_sym('l', count);
+                    if (session_values_.exists(landmark_sym)) {
+                        session_values_.erase(landmark_sym);
+                    }
+                }
+            }
+        }
+        myfile.close();
+        memset(MeasurmentTable, 0, 50000*3*(sizeof(int)));
+        tmp_s.clear();
+        counter++;
+
+        //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
         gtsam::KeyVector key_del_fac_first,key_del_fac_second; // List of keys for deleted FACTORS
         createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
         //std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
@@ -188,6 +244,7 @@ namespace ORB_SLAM2 {
         last_session_factors_ = session_factors_;
 
         delete lock;
+
     }
 
     void GtsamTransformer::exportKeysFromMap(std::map<std::pair<gtsam::Key, gtsam::Key>, std::pair<std::string, FactorType>> &map,
@@ -248,22 +305,22 @@ namespace ORB_SLAM2 {
                     factor_indecies_dict_[std::make_pair(between_factor.keys()[0], between_factor.keys()[1])] = current_index_++;
                     break;
                 }
-                case FactorType::MONO: {
-                    gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2> mono_factor;
-                    gtsam::deserialize(it.first, mono_factor);
-                    if (!is_incremental && (del_factors_.size() > 0 || del_states_.size() > 0)) {
-                        gtsam::Symbol first_sym(mono_factor.keys().at(0));
-                        gtsam::Symbol second_sym(mono_factor.keys().at(1));
-                        if ((std::find(del_factors_.begin(), del_factors_.end(), std::make_pair(first_sym.key(), second_sym.key())) != del_factors_.end())
-                            || (std::find(del_states_.begin(), del_states_.end(), first_sym.key()) != del_states_.end())
-                            || (std::find(del_states_.begin(), del_states_.end(), second_sym.key()) != del_states_.end())) {
-                            break;
-                        } else {
-                            new_active_factors[std::make_pair(first_sym.key(), second_sym.key())] = it;
-                        }
-                    }
-                    graph.push_back(mono_factor);
-                    factor_indecies_dict_[std::make_pair(mono_factor.keys()[0], mono_factor.keys()[1])] = current_index_++;
+                case FactorType::MONO: { //todo - comm out for debugging
+//                    gtsam::GenericProjectionFactor<gtsam::Pose3, gtsam::Point3, gtsam::Cal3_S2> mono_factor;
+//                    gtsam::deserialize(it.first, mono_factor);
+//                    if (!is_incremental && (del_factors_.size() > 0 || del_states_.size() > 0)) {
+//                        gtsam::Symbol first_sym(mono_factor.keys().at(0));
+//                        gtsam::Symbol second_sym(mono_factor.keys().at(1));
+//                        if ((std::find(del_factors_.begin(), del_factors_.end(), std::make_pair(first_sym.key(), second_sym.key())) != del_factors_.end())
+//                            || (std::find(del_states_.begin(), del_states_.end(), first_sym.key()) != del_states_.end())
+//                            || (std::find(del_states_.begin(), del_states_.end(), second_sym.key()) != del_states_.end())) {
+//                            break;
+//                        } else {
+//                            new_active_factors[std::make_pair(first_sym.key(), second_sym.key())] = it;
+//                        }
+//                    }
+//                    graph.push_back(mono_factor);
+//                    factor_indecies_dict_[std::make_pair(mono_factor.keys()[0], mono_factor.keys()[1])] = current_index_++;
                     break;
                 }
                 case FactorType::STEREO: {
@@ -330,6 +387,7 @@ namespace ORB_SLAM2 {
                           << dict_it->second << std::endl;
             }
         }*/
+
         return deleted_factors_indecies;
     }
 
@@ -354,9 +412,9 @@ namespace ORB_SLAM2 {
 
 //        ofstream myfile;
 //        std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
-//        std::string pathBF = "/usr/ANPLprefix/orb-slam2/beforeKey.txt";
-//        std::string pathLAF = "/usr/ANPLprefix/orb-slam2/LandafterKey.txt";
-//        std::string pathLBF = "/usr/ANPLprefix/orb-slam2/LandbeforeKey.txt";
+
+
+
 
         for (const auto &pKF: vpKFs) {
             if (pKF->isBad())
@@ -364,7 +422,14 @@ namespace ORB_SLAM2 {
             updateKeyFrame(pKF, true); // Elad: bool condition for creating between fac using last opt values (true- use, false- guess what)
 
         }
-        cout << "transformGraphToGtsam: After updateKeyFrame() for loop" << endl;
+        for (const auto &pKF: vpKFs) {
+            if (pKF->isBad())
+                continue;
+            updateKeyFrameBetween(pKF, true);
+
+        }
+
+
         //gtsam::serializeToFile(session_values_, pathAF);
         //gtsam::serializeToFile(values_before_transf, pathBF);
 
@@ -378,6 +443,11 @@ namespace ORB_SLAM2 {
 
         calculateDiffrencesBetweenValueSets();
         calculateDiffrencesBetweenFactorSets();
+
+        // loop over all landmarks in sesssion_vals
+        // for each, chaeck check factors
+        // if there is a lanmdark with only mono factors, remove these factors, and the landmark
+
         finish();
         //gtsam::serializeToFile(session_values_, pathLAF);
         //gtsam::serializeToFile(values_before_transf, pathLBF);
@@ -418,17 +488,19 @@ namespace ORB_SLAM2 {
             auto prior_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6));
             gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol('x', 0), robot_pose, prior_noise);
             session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(prior_factor), FactorType::PRIOR);
+            cout << "transformGraphToGtsam: Adding prior factor for x0" << endl;
         }
 
         // Adding between factor
         if (add_between_factor) {
-            if (pKF->mnId != 0) {
+            if (pKF->mnId > 0) {
                 gtsam::Symbol sym_before('x', pKF->mnId - 1);
                 if (session_values_.exists(sym_before.key())) {
-                    gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())).between(gtsam::Pose3());
+                    gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
                     gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);
                     session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
-                }
+                    cout << "transformGraphToGtsam: Adding between factor (xid, xid-1 )" << "(" << pKF->mnId << ", " << pKF->mnId-1  << ")" << endl;
+                } else {cout << "transformGraphToGtsam: KeyFrame does not exit in values (pKF->mnId - 1) " <<  pKF->mnId - 1  << endl;}
             }
         }
 
@@ -438,30 +510,78 @@ namespace ORB_SLAM2 {
         }
     }
 
+
+
+    void GtsamTransformer::updateKeyFrameBetween(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
+        // Create keyframe symbol
+        gtsam::Symbol sym('x', pKF->mnId);
+
+        // Create camera parameters
+        if (!is_cam_params_initialized_) {
+            cam_params_stereo_.reset(new gtsam::Cal3_S2Stereo(pKF->fx, pKF->fy, 0.0, pKF->cx, pKF->cy, pKF->mb));
+            cam_params_mono_.reset(new gtsam::Cal3_S2(cam_params_stereo_->calibration()));
+            is_cam_params_initialized_ = true;
+        }
+
+        // Create pose
+        cv::Mat T_cv = pKF->GetPose();
+        Eigen::Map<Eigen::Matrix<float, 4, 4, Eigen::RowMajor>> T_gtsam(T_cv.ptr<float>(), T_cv.rows, T_cv.cols);
+        gtsam::Pose3 left_cam_pose(T_gtsam.cast<double>());
+
+        left_cam_pose = init_pose_robot.compose(sensor_to_body_temp.compose(left_cam_pose));
+        gtsam::Pose3 robot_pose = left_cam_pose.compose(sensor_to_body_temp.inverse());
+
+        // Adding between factor
+        if (add_between_factor) {
+            if (pKF->mnId > 0) {
+                gtsam::Symbol sym_before('x', pKF->mnId - 1);
+                if (session_values_.exists(sym_before.key())) {
+                    gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
+                    gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);
+                    session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
+                    cout << "updateKeyFrameBetween: Adding between factor (xid, xid-1 )" << "(" << pKF->mnId << ", " << pKF->mnId-1  << ")" << endl;
+                } else {cout << "updateKeyFrameBetween: KeyFrame does not exit in values (pKF->mnId - 1) " <<  pKF->mnId - 1  << endl;}
+            }
+        }
+
+
+    }
+
+
+
     void GtsamTransformer::updateLandmark(ORB_SLAM2::MapPoint *pMP) {
         // Create landmark symbol
         gtsam::Symbol sym('l', pMP->mnId);
+
+
 
         // Create landmark position
         cv::Mat p_cv = pMP->GetWorldPos();
         //gtsam::Point3 p_gtsam(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
         gtsam::Vector3 t_vector(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
 
-        // +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+        /*// +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
         gtsam::Vector3 t_vector_BF(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
         //t_vector_BF += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
         gtsam::Point3 p_gtsam_BF(t_vector_BF.x(), t_vector_BF.y(), t_vector_BF.z());
         values_before_transf.insert(sym.key(), p_gtsam_BF);
-        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//*/
 
         t_vector = init_pose_robot.rotation().matrix()*sensor_to_body_temp.rotation().matrix()*t_vector;
         t_vector += init_pose_robot.translation().vector() + sensor_to_body_temp.translation().vector();
 
         gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
         session_values_.insert(sym.key(), p_gtsam);
-        gtsam::SharedNoiseModel model = gtsam::noiseModel::Gaussian::Information(2*gtsam::eye(3));
 
-        session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(gtsam::PriorFactor<gtsam::Point3>(sym.key(),p_gtsam,model)), FactorType::PRIOR);
+//        gtsam::SharedNoiseModel model = gtsam::noiseModel::Gaussian::Information(2*gtsam::eye(3));
+//        session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(gtsam::PriorFactor<gtsam::Point3>(sym,p_gtsam,model)), FactorType::PRIOR);
+
+//        gtsam::Pose3 robot_pose;
+//        auto prior_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(3) << 1e-6, 1e-6, 1e-6));
+//        gtsam::PriorFactor<gtsam::Pose3> prior_factor(sym, robot_pose, prior_noise);
+//        session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(prior_factor), FactorType::PRIOR);
+//        cout << "transformGraphToGtsam: Adding prior factor :" << endl;
+//        sym.print();
     }
 
     void GtsamTransformer::updateObservations(MapPoint *pMP, const map<ORB_SLAM2::KeyFrame *, size_t> &observations) {

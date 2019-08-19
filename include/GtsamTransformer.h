@@ -138,6 +138,7 @@ class GtsamTransformer {
   bool start();
   void finish();
   void updateKeyFrame(KeyFrame *pKF, bool add_between_factor = false);
+  void updateKeyFrameBetween(KeyFrame *pKF, bool add_between_factor = false);
   void updateLandmark(MapPoint *pMP);
   void updateObservations(MapPoint *pMP, const std::map<KeyFrame *, size_t> &observations);
   void addMonoMeasurement(KeyFrame *pKF, MapPoint *pMP, Eigen::Matrix<double, 2, 1> &obs, const float inv_sigma_2);
@@ -181,6 +182,7 @@ class GtsamTransformer {
   std::map<std::pair<gtsam::Key, gtsam::Key>, size_t> factor_indecies_dict_;
   size_t current_index_ = 0;
   UpdateType update_type_;
+
 
   std::mutex mutex_;
 
