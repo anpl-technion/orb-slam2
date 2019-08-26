@@ -74,6 +74,8 @@ class GtsamTransformer {
  public:
   GtsamTransformer();
 
+  bool mpc_trigger;
+
   gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
   gtsam::Pose3 init_pose_robot;
 
