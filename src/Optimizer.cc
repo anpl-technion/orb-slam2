@@ -881,7 +881,10 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         gtsam::serializeToFile(nonBoostVal,
                                "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counter) + ".txt");
     }
-  gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
+//    if (MPC is TRUE - jump over dont call gtsam_transformer)
+if (!gtsam_transformer->mpc_trigger) {
+    gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
+}
   counter++;
   ofsErase.close();
 }
