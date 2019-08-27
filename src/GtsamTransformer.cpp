@@ -15,7 +15,7 @@
 
 
 //#define DEBUG
-int counter = 1;
+//int counterMeasurmentTable = 1;
 namespace ORB_SLAM2 {
     GtsamTransformer::GtsamTransformer() {
         logger_ = spdlog::rotating_logger_st("GtsamTransformer",
@@ -121,6 +121,7 @@ namespace ORB_SLAM2 {
     }
 
     GtsamTransformer::returnedTuple GtsamTransformer::checkForNewData() {
+
         if (ready_data_queue_.empty()) {
             logger_->debug("checkForNewData - there is no new data.");
             return std::make_tuple(false, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none, boost::none,boost::none,boost::none);
@@ -171,18 +172,18 @@ namespace ORB_SLAM2 {
         //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         //@@@@@@@@@@ del all values connected to just mono factors     @@@@@@@@@@@@@@@@@
 
-        ofstream myfile;
-        std::string tmp_s = "0";
-        if (counter > 9) {
-            tmp_s = "";
-        }
-        std::string path = "/usr/ANPLprefix/orb-slam2/DEBUG/MeasurmentTable_" + tmp_s + std::to_string(counter) + ".txt";
-        myfile.open(path);
+        //ofstream myfile;
+        //std::string tmp_s = "0";
+//        if (counterMeasurmentTable > 9) {
+//            tmp_s = "";
+//        }
+//        std::string path = "/usr/ANPLprefix/orb-slam2/DEBUG/MeasurmentTable_" + tmp_s + std::to_string(counterMeasurmentTable) + ".txt";
+//        myfile.open(path);
         for(int count = 0; count < 50000; count ++){
             if ((MeasurmentTable[count][0] !=0) || (MeasurmentTable[count][1] !=0)) {
 //                myfile << count <<  " " << MeasurmentTable[count][0] << " " << MeasurmentTable[count][1] << endl;
                 if ((MeasurmentTable[count][0] > 0) && (MeasurmentTable[count][1] == 0)){
-                    myfile << count <<  " " << MeasurmentTable[count][0] << " " << MeasurmentTable[count][1] << endl;
+//                    myfile << count <<  " " << MeasurmentTable[count][0] << " " << MeasurmentTable[count][1] << endl;
                     gtsam::Symbol landmark_sym('l', count);
                     if (session_values_.exists(landmark_sym)) {
                         session_values_.erase(landmark_sym);
@@ -190,10 +191,10 @@ namespace ORB_SLAM2 {
                 }
             }
         }
-        myfile.close();
+//        myfile.close();
         memset(MeasurmentTable, 0, 50000*3*(sizeof(int)));
-        tmp_s.clear();
-        counter++;
+//        tmp_s.clear();
+//        counterMeasurmentTable++;
 
         //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

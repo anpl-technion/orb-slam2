@@ -468,7 +468,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
   return nInitialCorrespondences-nBad;
 }
 
-int counter = 1;
+int counterLBA = 1;
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, GtsamTransformer *gtsam_transformer)
 {
 
@@ -818,7 +818,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
       KeyFrame* pKFi = vToErase[i].first;
       MapPoint* pMPi = vToErase[i].second;
         if (DEBUG) {
-            ofsErase << pKFi->mnId << " " << pMPi->mnId << " " << counter;
+            ofsErase << pKFi->mnId << " " << pMPi->mnId << " " << counterLBA;
             ofsErase << endl;
         }
       pKFi->EraseMapPointMatch(pMPi);
@@ -869,23 +869,23 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     gtsam::KeyVector tempK(nonBoostVal.keys());
     int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
     std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
-    if (counter < 10)    {
+    if (counterLBA < 10)    {
         gtsam::serializeToFile(nonBoostFG,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_0" + to_string(counter) + ".txt");
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_0" + to_string(counterLBA) + ".txt");
         gtsam::serializeToFile(nonBoostVal,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_0" + to_string(counter) + ".txt");
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_0" + to_string(counterLBA) + ".txt");
     } else {
 
         gtsam::serializeToFile(nonBoostFG,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_" + to_string(counter) + ".txt");
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_" + to_string(counterLBA) + ".txt");
         gtsam::serializeToFile(nonBoostVal,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counter) + ".txt");
+                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counterLBA) + ".txt");
     }
 //    if (MPC is TRUE - jump over dont call gtsam_transformer)
 if (!gtsam_transformer->mpc_trigger) {
     gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
 }
-  counter++;
+  counterLBA++;
   ofsErase.close();
 }
 
