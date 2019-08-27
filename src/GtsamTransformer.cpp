@@ -422,50 +422,46 @@ namespace ORB_SLAM2 {
     }
 
     void GtsamTransformer::transformGraphToGtsam(const vector<ORB_SLAM2::KeyFrame *> &vpKFs, const vector<ORB_SLAM2::MapPoint *> &vpMP) {
-        if (!start())
-            return;
 
+        if (!start())
+                return;
 //        ofstream myfile;
 //        std::string pathAF = "/usr/ANPLprefix/orb-slam2/afterKey.txt";
 
+            for (const auto &pKF: vpKFs) {
+                if (pKF->isBad())
+                    continue;
+                updateKeyFrame(pKF,
+                               true); // Elad: bool condition for creating between fac using last opt values (true- use, false- guess what)
+            }
+            for (const auto &pKF: vpKFs) {
+                if (pKF->isBad())
+                    continue;
+                updateKeyFrameBetween(pKF, true);
 
+            }
 
+            //gtsam::serializeToFile(session_values_, pathAF);
+            //gtsam::serializeToFile(values_before_transf, pathBF);
 
-        for (const auto &pKF: vpKFs) {
-            if (pKF->isBad())
-                continue;
-            updateKeyFrame(pKF, true); // Elad: bool condition for creating between fac using last opt values (true- use, false- guess what)
+            for (const auto &pMP: vpMP) {
+                if (pMP->isBad())
+                    continue;
+                updateLandmark(pMP);
+                const std::map<KeyFrame *, size_t> observations = pMP->GetObservations();
+                updateObservations(pMP, observations);
+            }
 
-        }
-        for (const auto &pKF: vpKFs) {
-            if (pKF->isBad())
-                continue;
-            updateKeyFrameBetween(pKF, true);
+            calculateDiffrencesBetweenValueSets();
+            calculateDiffrencesBetweenFactorSets();
 
-        }
+            // loop over all landmarks in sesssion_vals
+            // for each, chaeck check factors
+            // if there is a lanmdark with only mono factors, remove these factors, and the landmark
 
-
-        //gtsam::serializeToFile(session_values_, pathAF);
-        //gtsam::serializeToFile(values_before_transf, pathBF);
-
-        for (const auto &pMP: vpMP) {
-            if (pMP->isBad())
-                continue;
-            updateLandmark(pMP);
-            const std::map<KeyFrame *, size_t> observations = pMP->GetObservations();
-            updateObservations(pMP, observations);
-        }
-
-        calculateDiffrencesBetweenValueSets();
-        calculateDiffrencesBetweenFactorSets();
-
-        // loop over all landmarks in sesssion_vals
-        // for each, chaeck check factors
-        // if there is a lanmdark with only mono factors, remove these factors, and the landmark
-
-        finish();
-        //gtsam::serializeToFile(session_values_, pathLAF);
-        //gtsam::serializeToFile(values_before_transf, pathLBF);
+            finish();
+            //gtsam::serializeToFile(session_values_, pathLAF);
+            //gtsam::serializeToFile(values_before_transf, pathLBF);
 
 
     }
