@@ -474,6 +474,11 @@ namespace ORB_SLAM2
 
       int DEBUG = 1;
 
+        //    if (MPC is TRUE - jump over dont call gtsam_transformer)
+        while (gtsam_transformer->mpc_trigger) {
+            sleep(0.1);
+        }
+
       ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
       ofstream ofsErase;
       ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
@@ -881,10 +886,7 @@ namespace ORB_SLAM2
         gtsam::serializeToFile(nonBoostVal,
                                "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counterLBA) + ".txt");
       }
-//    if (MPC is TRUE - jump over dont call gtsam_transformer)
-      while (gtsam_transformer->mpc_trigger) {
-        sleep(0.01);
-      }
+
       gtsam_transformer->transformGraphToGtsam(vpKFs, vpMP); // Andrej, not sending local Bundle Adjustment factor graph
       counterLBA++;
       ofsErase.close();
