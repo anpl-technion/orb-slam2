@@ -476,7 +476,7 @@ namespace ORB_SLAM2
 
         //    if (MPC is TRUE - jump over dont call gtsam_transformer)
         while (gtsam_transformer->mpc_trigger) {
-            sleep(0.1);
+            sleep(0.01);
         }
 
       ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
