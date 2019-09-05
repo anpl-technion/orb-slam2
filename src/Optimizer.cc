@@ -867,7 +867,7 @@ namespace ORB_SLAM2
 
       gtsam::KeyVector tempK(nonBoostVal.keys());
       int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
-      std::cout << " +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" <<  std::endl;
+
       if (counterLBA < 10)    {
         gtsam::serializeToFile(nonBoostFG,
                                "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_0" + to_string(counterLBA) + ".txt");
@@ -886,6 +886,7 @@ namespace ORB_SLAM2
         }
         counterLBA++;
         ofsErase.close();
+        std::cout << " +++++++++++++++++++++++++  END OF LBA  ++++++++++++++++++++" <<  std::endl;
     }
 
 

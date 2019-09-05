@@ -204,7 +204,7 @@ namespace ORB_SLAM2 {
         //std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
         if (update_type_ == INCREMENTAL) {
 
-            std::cout << "ORBSLAM: INCREMENTAL MODE\n";
+            std::cout << "GT_transformer: send data in INCREMENTAL MODE\n";
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
             //gtsam::serializeToFile(incremental_factor_graph, pathFGAF);
@@ -220,7 +220,7 @@ namespace ORB_SLAM2 {
                                       key_del_fac_second);     // added to replace createDeletedFactorsIndicesVec
         } else if (update_type_ == BATCH) {
 
-            std::cout << "ORBSLAM: BATCH MODE\n";
+            std::cout << "GT_transformer: send data in BATCH MODE\n";
             // Batch update
             auto active_factor_graph = createFactorGraph(session_factors_, false);
             //gtsam::serializeToFile(active_factor_graph, pathFGAF);
@@ -499,7 +499,7 @@ namespace ORB_SLAM2 {
             auto prior_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6));
             gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol('x', 0), robot_pose, prior_noise);
             session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(prior_factor), FactorType::PRIOR);
-            cout << "transformGraphToGtsam: Adding prior factor for x0" << endl;
+            //cout << "transformGraphToGtsam: Adding prior factor for x0" << endl;
         }
 
         // Adding between factor
