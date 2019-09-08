@@ -131,7 +131,7 @@ namespace ORB_SLAM2 {
             logger_->info("checkForNewData - returning new optimized data. ready_data_queue.size: {}", ready_data_queue_.size());
             auto data = ready_data_queue_.front();
             ready_data_queue_.pop();
-            std::cout << "checkForNewData - returns " << (std::get<1>(data) ? "Incremental" : "Batch") << " update" << std::endl;
+            //std::cout << "checkForNewData - returns " << (std::get<1>(data) ? "Incremental" : "Batch") << " update" << std::endl;
             return data;
         } else {
             logger_->error("checkForNewData - can't own mutex. returning false");
@@ -239,10 +239,10 @@ namespace ORB_SLAM2 {
 
 
 
-        std::cout << "finish - session_factors.size: " << session_factors_.size() << " last_session_factors.size: " << last_session_factors_.size()
-                  << " add_factors.size: " << add_factors_.size()
-                  << " del_factors.size: " << del_factors_.size() << " add_states.size: " << add_states_.size() << " del_states.size: "
-                  << del_states_.size() << " values.size: " << session_values_.size() << " last_values.size: " << last_session_values_.size() << std::endl;
+//        std::cout << "finish - session_factors.size: " << session_factors_.size() << " last_session_factors.size: " << last_session_factors_.size()
+//                  << " add_factors.size: " << add_factors_.size()
+//                  << " del_factors.size: " << del_factors_.size() << " add_states.size: " << add_states_.size() << " del_states.size: "
+//                  << del_states_.size() << " values.size: " << session_values_.size() << " last_values.size: " << last_session_values_.size() << std::endl;
 
 
 
@@ -358,10 +358,10 @@ namespace ORB_SLAM2 {
                 }
             }
         }
-        std::cout << "createFactorGraph - size: " << graph.size() << std::endl;
+        //std::cout << "createFactorGraph - size: " << graph.size() << std::endl;
         if (!is_incremental) {
             session_factors_ = new_active_factors;
-            cout << "new_active_factors.size() = " << new_active_factors.size() << endl;
+            //cout << "new_active_factors.size() = " << new_active_factors.size() << endl;
             for (const auto &it: del_states_) {
                 if (session_values_.find(it) != session_values_.end()) {
                     session_values_.erase(it);
