@@ -31,17 +31,16 @@ namespace ORB_SLAM2 {
 #endif
 
 
-
         logger_->info("CTOR - GtsamTransformer instance created");
-        between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 0.1, 0.1, 0.1)); // yaw(rad) , pitch(rad), roll(rad) ,x,y,z, Elad,Andrej
+        //between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 0.1, 0.1, 0.1)); // yaw(rad) , pitch(rad), roll(rad) ,x,y,z, Elad,Andrej
 
 
         // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
-        gtsam::Quaternion quat(0.5, -0.5, 0.5, -0.5);
-        gtsam::Point3 point(0.21, -0.06, 0.17);
-        sensor_to_body_temp = gtsam::Pose3(quat, point);
-
-        init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
+        //gtsam::Quaternion quat(0.5, -0.5, 0.5, -0.5);
+//        gtsam::Point3 point(0.21, -0.06, 0.17);//[m]
+//        sensor_to_body_temp = gtsam::Pose3(quat, point);
+//
+//        init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
     }
 
     int MeasurmentTable[50000][3] = {-1};
@@ -474,6 +473,11 @@ namespace ORB_SLAM2 {
             cam_params_stereo_.reset(new gtsam::Cal3_S2Stereo(pKF->fx, pKF->fy, 0.0, pKF->cx, pKF->cy, pKF->mb));
             cam_params_mono_.reset(new gtsam::Cal3_S2(cam_params_stereo_->calibration()));
             is_cam_params_initialized_ = true;
+
+            cout << "INIT POSE ROBOT: <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << endl;
+            cout << init_pose_robot << endl;
+            cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << endl;
+
         }
 
 

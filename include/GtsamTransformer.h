@@ -78,6 +78,7 @@ class GtsamTransformer {
 
   gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
   gtsam::Pose3 init_pose_robot;
+  gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
 
     typedef std::queue<std::tuple<bool,
             bool,
@@ -174,7 +175,7 @@ class GtsamTransformer {
   gtsam::Values session_values_, last_session_values_, values_before_transf;
   gtsam::Cal3_S2Stereo::shared_ptr cam_params_stereo_;
   gtsam::Cal3_S2::shared_ptr cam_params_mono_;
-  gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
+
   bool is_cam_params_initialized_ = false;
   std::vector<std::pair<std::string, FactorType>> add_factors_;
   std::vector<std::pair<gtsam::Key, gtsam::Key>> del_factors_;
