@@ -472,7 +472,7 @@ namespace ORB_SLAM2
     void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap, GtsamTransformer *gtsam_transformer)
     {
 
-      int DEBUG = 1;
+      int DEBUG = 0;
       ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
       ofstream ofsErase;
       ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
@@ -856,30 +856,42 @@ namespace ORB_SLAM2
         }
       }
 
+
+      //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       // Export G2O --- YAY
       //optimizer.save("/usr/ANPLprefix/orb-slam2/g2o.txt"); // does not work yet, needs to register types of states and measurements
-      gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
-      gtsam::Values::shared_ptr g2ovalues;
-      bool is3D = true;
-      boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt", is3D);
-      gtsam::NonlinearFactorGraph nonBoostFG = *g2ograph;
-      gtsam::Values nonBoostVal = *g2ovalues;
+      if (DEBUG) {
+                  gtsam::NonlinearFactorGraph::shared_ptr g2ograph;
+                  gtsam::Values::shared_ptr g2ovalues;
+                  bool is3D = true;
+                  boost::tie(g2ograph, g2ovalues) = gtsam::readG2o("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt", is3D);
+                  gtsam::NonlinearFactorGraph nonBoostFG = *g2ograph;
+                  gtsam::Values nonBoostVal = *g2ovalues;
 
-      gtsam::KeyVector tempK(nonBoostVal.keys());
-      int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
+                  gtsam::KeyVector tempK(nonBoostVal.keys());
+                  int lastPoseIndex = gtsam::symbolIndex(tempK.at(nonBoostVal.size()-1));
 
-      if (counterLBA < 10)    {
-        gtsam::serializeToFile(nonBoostFG,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_0" + to_string(counterLBA) + ".txt");
-        gtsam::serializeToFile(nonBoostVal,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_0" + to_string(counterLBA) + ".txt");
-      } else {
+                  if (counterLBA < 10)    {
+                      gtsam::serializeToFile(nonBoostFG,
+                                             "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_0" + to_string(counterLBA) +
+                                             ".txt");
+                      gtsam::serializeToFile(nonBoostVal,
+                                             "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_0" + to_string(counterLBA) +
+                                             ".txt");
+                  } else {
 
-        gtsam::serializeToFile(nonBoostFG,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_" + to_string(counterLBA) + ".txt");
-        gtsam::serializeToFile(nonBoostVal,
-                               "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counterLBA) + ".txt");
-      }
+                      gtsam::serializeToFile(nonBoostFG,
+                                             "/usr/ANPLprefix/orb-slam2/DEBUG/fg_g2o_" + to_string(counterLBA) +
+                                             ".txt");
+                      gtsam::serializeToFile(nonBoostVal,
+                                             "/usr/ANPLprefix/orb-slam2/DEBUG/val_g2o_" + to_string(counterLBA) +
+                                             ".txt");
+                  }
+          }
+      //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
         if (gtsam_transformer->mpc_trigger == 0) { // dont send data to gtsam when mpc is true(1 || 2)
             gtsam_transformer->mpc_trigger = 3;
             gtsam_transformer->transformGraphToGtsam(vpKFs,vpMP); // Andrej, not sending local Bundle Adjustment factor graph
