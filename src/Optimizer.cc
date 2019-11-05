@@ -898,7 +898,7 @@ namespace ORB_SLAM2
         }
         counterLBA++;
         ofsErase.close();
-        std::cout << " +++++++++++++++++++++++++  END OF LBA  ++++++++++++++++++++" <<  std::endl;
+//        std::cout << " +++++++++++++++++++++++++  END OF LBA  ++++++++++++++++++++" <<  std::endl;
     }
 
 

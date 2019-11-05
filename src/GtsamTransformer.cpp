@@ -159,6 +159,7 @@ namespace ORB_SLAM2 {
     }
 
     void GtsamTransformer::finish() {
+        static int counter = 1;
         std::unique_lock<std::mutex> *lock;
         do {
             lock = new std::unique_lock<std::mutex>(mutex_, std::try_to_lock);
@@ -202,8 +203,9 @@ namespace ORB_SLAM2 {
         createDeletedFactorsIndicesVec(del_factors_,key_del_fac_first,key_del_fac_second);
         //std::string pathFGAF = "/usr/ANPLprefix/orb-slam2/FG_AF.txt";
         if (update_type_ == INCREMENTAL) {
-
-            std::cout << "GT_transformer: send data in INCREMENTAL MODE\n";
+            if (counter == 1) {
+                std::cout << "GT_transformer: send data in INCREMENTAL MODE\n";
+            }
             // Incremental update
             auto incremental_factor_graph = createFactorGraph(add_factors_, true);
             //gtsam::serializeToFile(incremental_factor_graph, pathFGAF);
@@ -218,8 +220,9 @@ namespace ORB_SLAM2 {
                                       key_del_fac_first,       // added to replace createDeletedFactorsIndicesVec
                                       key_del_fac_second);     // added to replace createDeletedFactorsIndicesVec
         } else if (update_type_ == BATCH) {
-
-            std::cout << "GT_transformer: send data in BATCH MODE\n";
+            if (counter == 1) {
+                std::cout << "GT_transformer: send data in BATCH MODE\n";
+            }
             // Batch update
             auto active_factor_graph = createFactorGraph(session_factors_, false);
             //gtsam::serializeToFile(active_factor_graph, pathFGAF);
@@ -235,7 +238,7 @@ namespace ORB_SLAM2 {
                                       key_del_fac_second);     // added to replace createDeletedFactorsIndicesVec
         }
         logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
-
+        counter++;
 
 
 //        std::cout << "finish - session_factors.size: " << session_factors_.size() << " last_session_factors.size: " << last_session_factors_.size()
