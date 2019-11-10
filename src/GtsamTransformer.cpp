@@ -238,6 +238,7 @@ namespace ORB_SLAM2 {
                                       key_del_fac_second);     // added to replace createDeletedFactorsIndicesVec
         }
         logger_->info("finish - ready_data_queue.size: {}", ready_data_queue_.size());
+        std::cout << "finish - ready_data_queue.size = " << ready_data_queue_.size() << std::endl;
         counter++;
 
 
