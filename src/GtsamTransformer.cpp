@@ -53,8 +53,9 @@ namespace ORB_SLAM2 {
             std::cout << "addMonoMeasurement - camera params has not been initialized!" << std::endl;
             exit(-2);
         }
+
         // Create both symbols
-        gtsam::Symbol keyframe_sym('x', pKF->mnId);
+        gtsam::Symbol keyframe_sym(from_wrapper.robot_id, pKF->mnId);
         gtsam::Symbol landmark_sym('l', pMP->mnId);
 
         // add table entry
@@ -91,7 +92,7 @@ namespace ORB_SLAM2 {
             exit(-2);
         }
         // Create both symbols
-        gtsam::Symbol keyframe_sym('x', pKF->mnId);
+        gtsam::Symbol keyframe_sym(from_wrapper.robot_id, pKF->mnId);
         gtsam::Symbol landmark_sym('l', pMP->mnId);
 
         // add table entry
@@ -470,7 +471,7 @@ namespace ORB_SLAM2 {
     }
     void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
         // Create keyframe symbol
-        gtsam::Symbol sym('x', pKF->mnId);
+        gtsam::Symbol sym(from_wrapper.robot_id, pKF->mnId);
 
         // Create camera parameters
         if (!is_cam_params_initialized_) {
@@ -505,7 +506,7 @@ namespace ORB_SLAM2 {
         // Adding prior factor for x0
         if (pKF->mnId == 0) {
             auto prior_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6));
-            gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol('x', 0), robot_pose, prior_noise);
+            gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol(from_wrapper.robot_id, 0), robot_pose, prior_noise);
             session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(prior_factor), FactorType::PRIOR);
             //cout << "transformGraphToGtsam: Adding prior factor for x0" << endl;
         }
@@ -513,7 +514,7 @@ namespace ORB_SLAM2 {
         // Adding between factor
         if (add_between_factor) {
             if (pKF->mnId > 0) {
-                gtsam::Symbol sym_before('x', pKF->mnId - 1);
+                gtsam::Symbol sym_before(from_wrapper.robot_id, pKF->mnId - 1);
                 if (session_values_.exists(sym_before.key())) {
                     gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
                     gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);
@@ -533,7 +534,7 @@ namespace ORB_SLAM2 {
 
     void GtsamTransformer::updateKeyFrameBetween(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
         // Create keyframe symbol
-        gtsam::Symbol sym('x', pKF->mnId);
+        gtsam::Symbol sym(from_wrapper.robot_id, pKF->mnId);
 
         // Create camera parameters
         if (!is_cam_params_initialized_) {
@@ -553,7 +554,7 @@ namespace ORB_SLAM2 {
         // Adding between factor
         if (add_between_factor) {
             if (pKF->mnId > 0) {
-                gtsam::Symbol sym_before('x', pKF->mnId - 1);
+                gtsam::Symbol sym_before(from_wrapper.robot_id, pKF->mnId - 1);
                 if (session_values_.exists(sym_before.key())) {
                     gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
                     gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, between_factors_prior_);

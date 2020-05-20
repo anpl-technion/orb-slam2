@@ -60,8 +60,22 @@ class System
 
  public:
 
+ 
+// struct a_param
+//  {
+//      char robot_id;
+//      std::string robot_name;
+//      short mpc_trigger;
+//      // future parameters
+//  };
+
+
+
   // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
   System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
+
+  // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
+  System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, GtsamTransformer::additional_params_from_wrapper p, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
 
   // Proccess the given stereo frame. Images must be synchronized and rectified.
   // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.

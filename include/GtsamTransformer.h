@@ -11,6 +11,7 @@
 #include <queue>
 
 #include "Converter.h"
+// #include "System.h"
 
 // For keys representation
 #include <gtsam/inference/Symbol.h>
@@ -55,6 +56,7 @@ namespace ORB_SLAM2 {
 class KeyFrame;
 class MapPoint;
 
+
 class GtsamTransformer {
   friend class Optimizer;
 
@@ -74,11 +76,19 @@ class GtsamTransformer {
  public:
   GtsamTransformer();
 
-  int mpc_trigger;
-
+  
   gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
   gtsam::Pose3 init_pose_robot;
   gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
+
+  // (Used in System.h)
+    struct additional_params_from_wrapper
+  {
+      char robot_id;
+      std::string robot_name;
+      short mpc_trigger;
+      // future parameters
+  } from_wrapper;
 
     typedef std::queue<std::tuple<bool,
             bool,
