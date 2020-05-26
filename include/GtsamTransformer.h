@@ -76,17 +76,15 @@ class GtsamTransformer {
  public:
   GtsamTransformer();
 
-  
-  gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
-  gtsam::Pose3 init_pose_robot;
-  gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
-
   // (Used in System.h)
     struct additional_params_from_wrapper
   {
       char robot_id;
       std::string robot_name;
       short mpc_trigger;
+      gtsam::Pose3 init_pose_rob;
+      gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
+      gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
       // future parameters
   } from_wrapper;
 

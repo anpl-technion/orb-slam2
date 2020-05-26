@@ -25,6 +25,7 @@
 #include <thread>
 #include <pangolin/pangolin.h>
 #include <iomanip>
+//#include <gtsam/geometry/Pose3.h>
 
 namespace ORB_SLAM2
 {
@@ -136,12 +137,17 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
              "This is free software, and you are welcome to redistribute it" << endl <<
              "under certain conditions. See LICENSE.txt." << endl << endl;
 
-        cout << "Input sensor was set to: " << endl ;
-
+        cout << "-----------------------------------------------" << endl;
         cout << "Robot ID = " << p.robot_id << " And Robot Name is = " << p.robot_name << endl;
+        cout << "-----------------------------------------------" << endl;
         gtsam_transformer_.from_wrapper.robot_id = p.robot_id;
         gtsam_transformer_.from_wrapper.robot_name = p.robot_name;
+        gtsam_transformer_.from_wrapper.init_pose_rob = p.init_pose_rob;
+        gtsam_transformer_.from_wrapper.sensor_to_body_temp = p.sensor_to_body_temp;
+        gtsam_transformer_.from_wrapper.between_factors_prior_ = p.between_factors_prior_;
 
+
+        cout << "Input sensor was set to: " << endl ;
         if(mSensor==MONOCULAR)
             cout << "Monocular" << endl;
         else if(mSensor==STEREO)
