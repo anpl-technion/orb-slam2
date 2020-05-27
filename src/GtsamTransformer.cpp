@@ -26,6 +26,37 @@ namespace ORB_SLAM2 {
         logger_->set_level(spdlog::level::debug);
 
 
+
+#else
+        logger_->set_level(spdlog::level::info);
+#endif
+
+
+        logger_->info("CTOR - GtsamTransformer instance created");
+        //between_factors_prior_ = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 0.1, 0.1, 0.1)); // yaw(rad) , pitch(rad), roll(rad) ,x,y,z, Elad,Andrej
+
+
+        // Transformation from optical frame to robot frame, for now independent from ROS infrastructure
+        //gtsam::Quaternion quat(0.5, -0.5, 0.5, -0.5);
+//        gtsam::Point3 point(0.21, -0.06, 0.17);//[m]
+//        sensor_to_body_temp = gtsam::Pose3(quat, point);
+//
+//        init_pose_robot = gtsam::Pose3(gtsam::Quaternion(0.707,0,0,0.707), gtsam::Point3(2,-6,0));
+    }
+
+
+    GtsamTransformer::GtsamTransformer(struct additional_params_from_wrapper p) {
+        logger_ = spdlog::rotating_logger_st("GtsamTransformer",
+                                             "GtsamTransformer.log",
+                                             1048576 * 50,
+                                             3);
+        p_wrapper = p;
+
+#ifdef DEBUG
+        logger_->set_level(spdlog::level::debug);
+
+
+
 #else
         logger_->set_level(spdlog::level::info);
 #endif
@@ -55,7 +86,7 @@ namespace ORB_SLAM2 {
         }
 
         // Create both symbols
-        gtsam::Symbol keyframe_sym(from_wrapper.robot_id, pKF->mnId);
+        gtsam::Symbol keyframe_sym(p_wrapper.robot_id , pKF->mnId);
         gtsam::Symbol landmark_sym('l', pMP->mnId);
 
         // add table entry
@@ -77,7 +108,7 @@ namespace ORB_SLAM2 {
                        gtsam::noiseModel::Diagonal::Variances(Eigen::Vector2d(1 / inv_sigma_2, 1 / inv_sigma_2)),
                        keyframe_sym.key(),
                        landmark_sym.key(),
-                       cam_params_mono_, from_wrapper.sensor_to_body_temp);
+                       cam_params_mono_, p_wrapper.sensor_to_body_temp);
         session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::MONO);
 
     }
@@ -92,7 +123,7 @@ namespace ORB_SLAM2 {
             exit(-2);
         }
         // Create both symbols
-        gtsam::Symbol keyframe_sym(from_wrapper.robot_id, pKF->mnId);
+        gtsam::Symbol keyframe_sym(p_wrapper.robot_id, pKF->mnId);
         gtsam::Symbol landmark_sym('l', pMP->mnId);
 
         // add table entry
@@ -115,7 +146,7 @@ namespace ORB_SLAM2 {
                        gtsam::noiseModel::Diagonal::Variances(Eigen::Vector3d(1 / inv_sigma_2, 1 / inv_sigma_2, 1 / inv_sigma_2)),
                        keyframe_sym.key(),
                        landmark_sym.key(),
-                       cam_params_stereo_, from_wrapper.sensor_to_body_temp); // default:  boost::optional<POSE> body_P_sensor = boost::none => Identity, Andrej
+                       cam_params_stereo_, p_wrapper.sensor_to_body_temp); // default:  boost::optional<POSE> body_P_sensor = boost::none => Identity, Andrej
 
         session_factors_[std::make_pair(keyframe_sym.key(), landmark_sym.key())] = std::make_pair(gtsam::serialize(factor), FactorType::STEREO);
     }
@@ -471,7 +502,7 @@ namespace ORB_SLAM2 {
     }
     void GtsamTransformer::updateKeyFrame(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
         // Create keyframe symbol
-        gtsam::Symbol sym(from_wrapper.robot_id, pKF->mnId);
+        gtsam::Symbol sym(p_wrapper.robot_id, pKF->mnId);
 
         // Create camera parameters
         if (!is_cam_params_initialized_) {
@@ -480,7 +511,7 @@ namespace ORB_SLAM2 {
             is_cam_params_initialized_ = true;
 
             cout << "INIT POSE ROBOT: <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << endl;
-            cout << from_wrapper.init_pose_rob << endl;
+            cout << p_wrapper.init_pose_rob << endl;
             cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< " << endl;
 
         }
@@ -498,15 +529,15 @@ namespace ORB_SLAM2 {
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 
-        left_cam_pose = from_wrapper.init_pose_rob.compose(from_wrapper.sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame
+        left_cam_pose = p_wrapper.init_pose_rob.compose(p_wrapper.sensor_to_body_temp.compose(left_cam_pose)); // pose of the camera in the world frame
         //gtsam::StereoCamera stereo_cam(left_cam_pose, cam_params_stereo_);
-        gtsam::Pose3 robot_pose = left_cam_pose.compose(from_wrapper.sensor_to_body_temp.inverse());
+        gtsam::Pose3 robot_pose = left_cam_pose.compose(p_wrapper.sensor_to_body_temp.inverse());
         session_values_.insert(sym.key(), robot_pose); //stereo_cam.pose()
 
         // Adding prior factor for x0
         if (pKF->mnId == 0) {
             auto prior_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-6, 1e-6, 1e-6));
-            gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol(from_wrapper.robot_id, 0), robot_pose, prior_noise);
+            gtsam::PriorFactor<gtsam::Pose3> prior_factor(gtsam::Symbol(p_wrapper.robot_id, 0), robot_pose, prior_noise);
             session_factors_[std::make_pair(sym.key(), sym.key())] = std::make_pair(gtsam::serialize(prior_factor), FactorType::PRIOR);
             //cout << "transformGraphToGtsam: Adding prior factor for x0" << endl;
         }
@@ -514,10 +545,10 @@ namespace ORB_SLAM2 {
         // Adding between factor
         if (add_between_factor) {
             if (pKF->mnId > 0) {
-                gtsam::Symbol sym_before(from_wrapper.robot_id, pKF->mnId - 1);
+                gtsam::Symbol sym_before(p_wrapper.robot_id, pKF->mnId - 1);
                 if (session_values_.exists(sym_before.key())) {
                     gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
-                    gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, from_wrapper.between_factors_prior_);
+                    gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, p_wrapper.between_factors_prior_);
                     session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
 
                 }
@@ -534,7 +565,7 @@ namespace ORB_SLAM2 {
 
     void GtsamTransformer::updateKeyFrameBetween(ORB_SLAM2::KeyFrame *pKF, bool add_between_factor) {
         // Create keyframe symbol
-        gtsam::Symbol sym(from_wrapper.robot_id, pKF->mnId);
+        gtsam::Symbol sym(p_wrapper.robot_id, pKF->mnId);
 
         // Create camera parameters
         if (!is_cam_params_initialized_) {
@@ -548,16 +579,16 @@ namespace ORB_SLAM2 {
         Eigen::Map<Eigen::Matrix<float, 4, 4, Eigen::RowMajor>> T_gtsam(T_cv.ptr<float>(), T_cv.rows, T_cv.cols);
         gtsam::Pose3 left_cam_pose(T_gtsam.cast<double>());
 
-        left_cam_pose = from_wrapper.init_pose_rob.compose(from_wrapper.sensor_to_body_temp.compose(left_cam_pose));
-        gtsam::Pose3 robot_pose = left_cam_pose.compose(from_wrapper.sensor_to_body_temp.inverse());
+        left_cam_pose = p_wrapper.init_pose_rob.compose(p_wrapper.sensor_to_body_temp.compose(left_cam_pose));
+        gtsam::Pose3 robot_pose = left_cam_pose.compose(p_wrapper.sensor_to_body_temp.inverse());
 
         // Adding between factor
         if (add_between_factor) {
             if (pKF->mnId > 0) {
-                gtsam::Symbol sym_before(from_wrapper.robot_id, pKF->mnId - 1);
+                gtsam::Symbol sym_before(p_wrapper.robot_id, pKF->mnId - 1);
                 if (session_values_.exists(sym_before.key())) {
                     gtsam::Pose3 relative_pose = robot_pose.between(session_values_.at<gtsam::Pose3>(sym_before.key())); //.between(gtsam::Pose3());
-                    gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, from_wrapper.between_factors_prior_);
+                    gtsam::BetweenFactor<gtsam::Pose3> between_factor(sym_before, sym, relative_pose, p_wrapper.between_factors_prior_);
                     session_factors_[std::make_pair(sym_before.key(), sym.key())] = std::make_pair(gtsam::serialize(between_factor), FactorType::BETWEEN);
 
                 }
@@ -582,13 +613,13 @@ namespace ORB_SLAM2 {
 
         /*// +++++ Before Inverse Points -- For text files ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
         gtsam::Vector3 t_vector_BF(p_cv.at<float>(0), p_cv.at<float>(1), p_cv.at<float>(2));
-        //t_vector_BF += from_wrapper.init_pose_rob.translation().vector() + from_wrapper.sensor_to_body_temp.translation().vector();
+        //t_vector_BF += p_wrapper.init_pose_rob.translation().vector() + p_wrapper.sensor_to_body_temp.translation().vector();
         gtsam::Point3 p_gtsam_BF(t_vector_BF.x(), t_vector_BF.y(), t_vector_BF.z());
         values_before_transf.insert(sym.key(), p_gtsam_BF);
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//*/
 
-        t_vector = from_wrapper.init_pose_rob.rotation().matrix()*from_wrapper.sensor_to_body_temp.rotation().matrix()*t_vector;
-        t_vector += from_wrapper.init_pose_rob.translation().vector() + from_wrapper.sensor_to_body_temp.translation().vector();
+        t_vector = p_wrapper.init_pose_rob.rotation().matrix()*p_wrapper.sensor_to_body_temp.rotation().matrix()*t_vector;
+        t_vector += p_wrapper.init_pose_rob.translation().vector() + p_wrapper.sensor_to_body_temp.translation().vector();
 
         gtsam::Point3 p_gtsam(t_vector.x(), t_vector.y(), t_vector.z());
         session_values_.insert(sym.key(), p_gtsam);

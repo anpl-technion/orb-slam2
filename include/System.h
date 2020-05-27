@@ -48,6 +48,19 @@ class Tracking;
 class LocalMapping;
 class LoopClosing;
 
+
+    struct additional_params_from_wrapper
+    {
+        char robot_id;
+        std::string robot_name;
+        short mpc_trigger;
+        gtsam::Pose3 init_pose_rob;
+        gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
+        gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
+        // future parameters
+    };
+
+
 class System
 {
  public:
@@ -60,14 +73,8 @@ class System
 
  public:
 
- 
-// struct a_param
-//  {
-//      char robot_id;
-//      std::string robot_name;
-//      short mpc_trigger;
-//      // future parameters
-//  };
+
+//additional_params_from_wrapper from_wrapper;
 
 
 
@@ -75,8 +82,11 @@ class System
   System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
 
   // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-  System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, GtsamTransformer::additional_params_from_wrapper p, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
+  System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, additional_params_from_wrapper p, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
 
+  ~System(){
+    delete gtsam_transformer_;
+  };
   // Proccess the given stereo frame. Images must be synchronized and rectified.
   // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
   // Returns the camera pose (empty if tracking fails).
@@ -138,7 +148,8 @@ class System
   std::vector<MapPoint*> GetTrackedMapPoints();
   std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
 
-  GtsamTransformer gtsam_transformer_;
+
+  GtsamTransformer* gtsam_transformer_;
 
  private:
 

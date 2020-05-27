@@ -125,7 +125,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,struct GtsamTransformer::additional_params_from_wrapper p,
+    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,struct additional_params_from_wrapper p,
                    const bool bUseViewer , const GtsamTransformer::UpdateType gtsam_type):
                            mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
                                                                                          mbDeactivateLocalizationMode(false)
@@ -138,13 +138,16 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
              "under certain conditions. See LICENSE.txt." << endl << endl;
 
         cout << "-----------------------------------------------" << endl;
-        cout << "Robot ID = " << p.robot_id << " And Robot Name is = " << p.robot_name << endl;
+        cout << "Robot ID = " << p.robot_id << " And Robot Name is = " << p.robot_name << " struc size " << sizeof(p) << endl;
         cout << "-----------------------------------------------" << endl;
-        gtsam_transformer_.from_wrapper.robot_id = p.robot_id;
-        gtsam_transformer_.from_wrapper.robot_name = p.robot_name;
-        gtsam_transformer_.from_wrapper.init_pose_rob = p.init_pose_rob;
-        gtsam_transformer_.from_wrapper.sensor_to_body_temp = p.sensor_to_body_temp;
-        gtsam_transformer_.from_wrapper.between_factors_prior_ = p.between_factors_prior_;
+
+        gtsam_transformer_= new GtsamTransformer(p);
+
+//        gtsam_transformer_.from_wrapper.robot_id = p.robot_id;
+//        gtsam_transformer_.from_wrapper.robot_name = p.robot_name;
+//        gtsam_transformer_.from_wrapper.init_pose_rob = p.init_pose_rob;
+//        gtsam_transformer_.from_wrapper.sensor_to_body_temp = p.sensor_to_body_temp;
+//        gtsam_transformer_.from_wrapper.between_factors_prior_ = p.between_factors_prior_;
 
 
         cout << "Input sensor was set to: " << endl ;
