@@ -11,7 +11,8 @@
 #include <queue>
 
 #include "Converter.h"
- #include "System.h"
+
+// #include "System.h"
 
 // For keys representation
 #include <gtsam/inference/Symbol.h>
@@ -67,6 +68,17 @@ class GtsamTransformer {
     STEREO
   };
  public:
+    struct additional_params_from_wrapper
+    {
+        char robot_id;
+        std::string robot_name;
+        short mpc_trigger;
+        gtsam::Pose3 init_pose_rob;
+        gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
+        gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
+        // future parameters
+    } p_wrapper; //additional_params_from_wrapper from_wrapper;
+
   // GTSAM Transformer Update Type
   enum UpdateType{
     BATCH=0,
@@ -75,12 +87,7 @@ class GtsamTransformer {
 
  public:
     GtsamTransformer();
-    GtsamTransformer(struct additional_params_from_wrapper p);
-
-
-    struct additional_params_from_wrapper p_wrapper;
-// (Used in System.h)
-
+    GtsamTransformer(struct additional_params_from_wrapper& p);
 
     typedef std::queue<std::tuple<bool,
             bool,

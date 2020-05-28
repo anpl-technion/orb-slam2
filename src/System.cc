@@ -55,7 +55,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
       cout << "Batch" << endl;
     else if (gtsam_type==GtsamTransformer::INCREMENTAL)
       cout << "Incremental" << endl;
-    gtsam_transformer_.setUpdateType(gtsam_type);
+    gtsam_transformer_->setUpdateType(gtsam_type);
 
     //Check settings file
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
@@ -95,7 +95,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
                              mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
 
     //Initialize the Local Mapping thread and launch
-    mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR, &gtsam_transformer_);
+    mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR, gtsam_transformer_);
     mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run,mpLocalMapper);
 
     //Initialize the Loop Closing thread and launch
@@ -125,7 +125,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,struct additional_params_from_wrapper p,
+    System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,struct GtsamTransformer::additional_params_from_wrapper& p,
                    const bool bUseViewer , const GtsamTransformer::UpdateType gtsam_type):
                            mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
                                                                                          mbDeactivateLocalizationMode(false)
@@ -143,11 +143,11 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
         gtsam_transformer_= new GtsamTransformer(p);
 
-//        gtsam_transformer_.from_wrapper.robot_id = p.robot_id;
-//        gtsam_transformer_.from_wrapper.robot_name = p.robot_name;
-//        gtsam_transformer_.from_wrapper.init_pose_rob = p.init_pose_rob;
-//        gtsam_transformer_.from_wrapper.sensor_to_body_temp = p.sensor_to_body_temp;
-//        gtsam_transformer_.from_wrapper.between_factors_prior_ = p.between_factors_prior_;
+//        gtsam_transformer_->from_wrapper.robot_id = p.robot_id;
+//        gtsam_transformer_->from_wrapper.robot_name = p.robot_name;
+//        gtsam_transformer_->from_wrapper.init_pose_rob = p.init_pose_rob;
+//        gtsam_transformer_->from_wrapper.sensor_to_body_temp = p.sensor_to_body_temp;
+//        gtsam_transformer_->from_wrapper.between_factors_prior_ = p.between_factors_prior_;
 
 
         cout << "Input sensor was set to: " << endl ;
@@ -163,7 +163,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
             cout << "Batch" << endl;
         else if (gtsam_type==GtsamTransformer::INCREMENTAL)
             cout << "Incremental" << endl;
-        gtsam_transformer_.setUpdateType(gtsam_type);
+        gtsam_transformer_->setUpdateType(gtsam_type);
 
         //Check settings file
         cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
@@ -203,7 +203,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
                                  mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
 
         //Initialize the Local Mapping thread and launch
-        mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR, &gtsam_transformer_);
+        mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR, gtsam_transformer_);
         mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run,mpLocalMapper);
 
         //Initialize the Loop Closing thread and launch

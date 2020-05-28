@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
 //      cout << "sleeping for: " << (T - ttrack) * 1e6 << endl;
 //      usleep((T - ttrack) * 1e6);
 //    }
-    auto result = SLAM.gtsam_transformer_.checkForNewData();
+    auto result = SLAM.gtsam_transformer_->checkForNewData();
     if (std::get<0>(result)) {
       std::cout << "Got new data! new_states: " << std::get<4>(result)->size() << " removed_states: " << std::get<5>(result)->size() << std::endl;
       std::cout << "Most recent timestamp: " << std::get<1>(std::get<7>(result).value()) << std::endl;

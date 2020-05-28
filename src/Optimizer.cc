@@ -892,8 +892,8 @@ namespace ORB_SLAM2
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-        if (gtsam_transformer->from_wrapper.mpc_trigger == 0) { // dont send data to gtsam when mpc is true(1 || 2)
-            gtsam_transformer->from_wrapper.mpc_trigger = 3;
+        if (gtsam_transformer->p_wrapper.mpc_trigger == 0) { // dont send data to gtsam when mpc is true(1 || 2)
+            gtsam_transformer->p_wrapper.mpc_trigger = 3;
             gtsam_transformer->transformGraphToGtsam(vpKFs,vpMP); // Andrej, not sending local Bundle Adjustment factor graph
         }
         counterLBA++;

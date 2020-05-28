@@ -48,19 +48,6 @@ class Tracking;
 class LocalMapping;
 class LoopClosing;
 
-
-    struct additional_params_from_wrapper
-    {
-        char robot_id;
-        std::string robot_name;
-        short mpc_trigger;
-        gtsam::Pose3 init_pose_rob;
-        gtsam::Pose3 sensor_to_body_temp; // sensor to body transformation
-        gtsam::noiseModel::Diagonal::shared_ptr between_factors_prior_;
-        // future parameters
-    };
-
-
 class System
 {
  public:
@@ -74,15 +61,11 @@ class System
  public:
 
 
-//additional_params_from_wrapper from_wrapper;
-
-
-
   // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
   System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
 
   // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-  System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, additional_params_from_wrapper p, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
+  System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, struct GtsamTransformer::additional_params_from_wrapper& p, const bool bUseViewer = true, const GtsamTransformer::UpdateType = GtsamTransformer::BATCH);
 
   ~System(){
     delete gtsam_transformer_;
