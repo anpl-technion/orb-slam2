@@ -477,7 +477,14 @@ namespace ORB_SLAM2
       ofstream ofsErase;
       ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
 
-      if (!ofs) return;
+      if (!ofs) {
+      	std::cout << "############################################################################## " << std::endl;
+      	std::cout << "Create '/usr/ANPLprefix/orb-slam2/DEBUG/' and give it write premissions !!!!!! " << std::endl;
+      	std::cout << "############################################################################## " << std::endl;
+      	if (!std::system("mkdir /usr/ANPLprefix/orb-slam2/DEBUG/"))	{
+      		std::cout << "Cannot create directory check premissions !!!!!! " << std::endl;
+      	}
+      	return;}
 
 
       auto vpKFs = pMap->GetAllKeyFrames();
