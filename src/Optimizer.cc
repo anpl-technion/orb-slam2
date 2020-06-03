@@ -473,11 +473,11 @@ namespace ORB_SLAM2
     {
 
       int DEBUG = 0;
-      ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
-      ofstream ofsErase;
-      ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
-
-      if (!ofs) {
+        ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
+      	ofstream ofsErase;
+      	ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
+  
+  	  if (!ofs) {
       	std::cout << "############################################################################## " << std::endl;
       	std::cout << "Create '/usr/ANPLprefix/orb-slam2/DEBUG/' and give it write premissions !!!!!! " << std::endl;
       	std::cout << "############################################################################## " << std::endl;
@@ -904,7 +904,9 @@ namespace ORB_SLAM2
             gtsam_transformer->transformGraphToGtsam(vpKFs,vpMP); // Andrej, not sending local Bundle Adjustment factor graph
         }
         counterLBA++;
-        ofsErase.close();
+ 		ofsErase.close();
+        ofs.close();
+     
 //        std::cout << " +++++++++++++++++++++++++  END OF LBA  ++++++++++++++++++++" <<  std::endl;
     }
 
