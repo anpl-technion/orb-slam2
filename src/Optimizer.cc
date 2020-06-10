@@ -35,9 +35,13 @@
 #include<mutex>
 #include <gtsam/slam/dataset.h>
 #include <gtsam/base/FastVector.h>
+
+
+
+
+
 namespace ORB_SLAM2
 {
-
 
     void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopFlag, const unsigned long nLoopKF, const bool bRobust, GtsamTransformer *gtsam_transformer)
     {
@@ -473,10 +477,10 @@ namespace ORB_SLAM2
     {
 
       int DEBUG = 0;
-        ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
-      	ofstream ofsErase;
-      	ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
-  
+      ofstream ofs("/usr/ANPLprefix/orb-slam2/DEBUG/g2o.txt");
+//      ofstream ofsErase;
+//      ofsErase.open("/usr/ANPLprefix/orb-slam2/DEBUG/g2oErase.txt", std::ios_base::app);
+
   	  if (!ofs) {
       	std::cout << "############################################################################## " << std::endl;
       	std::cout << "Create '/usr/ANPLprefix/orb-slam2/DEBUG/' and give it write premissions !!!!!! " << std::endl;
@@ -484,7 +488,8 @@ namespace ORB_SLAM2
       	if (!std::system("mkdir /usr/ANPLprefix/orb-slam2/DEBUG/"))	{
       		std::cout << "Cannot create directory check premissions !!!!!! " << std::endl;
       	}
-      	return;}
+      	return;
+  	  }
 
 
       auto vpKFs = pMap->GetAllKeyFrames();
@@ -824,8 +829,8 @@ namespace ORB_SLAM2
           KeyFrame* pKFi = vToErase[i].first;
           MapPoint* pMPi = vToErase[i].second;
           if (DEBUG) {
-            ofsErase << pKFi->mnId << " " << pMPi->mnId << " " << counterLBA;
-            ofsErase << endl;
+//            ofsErase << pKFi->mnId << " " << pMPi->mnId << " " << counterLBA;
+//            ofsErase << endl;
           }
           pKFi->EraseMapPointMatch(pMPi);
           pMPi->EraseObservation(pKFi);
@@ -904,7 +909,7 @@ namespace ORB_SLAM2
             gtsam_transformer->transformGraphToGtsam(vpKFs,vpMP); // Andrej, not sending local Bundle Adjustment factor graph
         }
         counterLBA++;
- 		ofsErase.close();
+// 		ofsErase.close();
         ofs.close();
      
 //        std::cout << " +++++++++++++++++++++++++  END OF LBA  ++++++++++++++++++++" <<  std::endl;
