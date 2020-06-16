@@ -24,40 +24,41 @@ ind2rem_ar(end)=[];
 % removed factors works, obviously indexing is changed and sequential
 
 % One by one
-% for indx = 1 : length(ind2rem_ar)
-%     remFac_keys = gtsam.KeyVector;
-%     remFac_keys.push_back(ind2rem_ar(indx));
-%     indx
-%     fg_bel.at(ind2rem_ar(indx))
-%     
-%     isam2 = gtsam.ISAM2;
-%     isam2.update(fg_bel, val_bel);
-%     
-% %     if indx == 1 
-%         isam2.update(inc_fg, inc_val02, remFac_keys)
-% %     else
-% %         isam2.update(gtsam.NonlinearFactorGraph, gtsam.Values, remFac_keys)
-% %     end
-% end
-
-% accumalative
-for num = 1:length(ind2rem_ar)
-for indx = 1 : num
+isam2 = gtsam.ISAM2;
+isam2.update(fg_bel, val_bel);
+    
+for indx = 1 : length(ind2rem_ar)
     remFac_keys = gtsam.KeyVector;
     remFac_keys.push_back(ind2rem_ar(indx));
+    indx
+    fg_bel.at(ind2rem_ar(indx))
+    
+    
+     if indx == 1 
+        isam2.update(inc_fg, inc_val02, remFac_keys)
+     else
+        isam2.update(gtsam.NonlinearFactorGraph, gtsam.Values, remFac_keys)
+     end
 end
-    num
-    isam2 = gtsam.ISAM2;
-    isam2.update(fg_bel, val_bel);
-    isam2.update(inc_fg, inc_val02, remFac_keys);
-end
-fg_bel.at(ind2rem_ar(num))
+
+% % accumalative
+% for num = 1:length(ind2rem_ar)
+%     remFac_keys = gtsam.KeyVector;
+%     for indx = 1 : num        
+%         remFac_keys.push_back(ind2rem_ar(indx));
+%     end
+%     num
+%     isam2 = gtsam.ISAM2;
+%     isam2.update(fg_bel, val_bel);
+%     isam2.update(inc_fg, inc_val02, remFac_keys);
+% end
+% fg_bel.at(ind2rem_ar(num))
 
 
 % c++
 remFac_keys = gtsam.KeyVector;
 
-for indx = 1 : length(ind2rem_ar)
+for indx = 1 : length(ind2rem_ar)-3
     
     remFac_keys.push_back(ind2rem_ar(indx));
     
